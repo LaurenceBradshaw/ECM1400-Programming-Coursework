@@ -10,21 +10,6 @@ import matplotlib.image as mpimg
 from typing import Union
 
 
-def read_image(img_name: str) -> Union[np.ndarray, None]:
-    """
-    Reads an image into an ndarray
-    :param img_name: name for the image being read
-    :return: returns an ndarray containing RGBA values for each pixel if the file was found and read or None if it wasn't
-    """
-    try:
-        # Read the image
-        img = mpimg.imread("data/{}.png".format(img_name))
-    # The file was not found, caused by the user inputting the wrong file name
-    except FileNotFoundError:
-        return None
-    return img
-
-
 def find_red_pixels(*args, **kwargs):
     """Your documentation goes here"""
     # If, at a pixel, r > Upper Threshold and g < Lower Threshold

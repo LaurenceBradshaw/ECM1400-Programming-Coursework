@@ -1,56 +1,11 @@
 # This is a template. 
 # You should modify the functions below to match
 # the signatures determined by the project specification
-import time
 import reporting
 import monitoring
 import intelligence
-import re
-import os
 import sys
-
-
-def clear():
-    """
-    Clears the text in the console
-
-    :return: None
-    """
-    os.system('cls')
-
-
-def get_valid_user_input(menu_text: str, regex: str) -> str:
-    """
-    Used to get a valid response from a user for a menu
-
-    :param menu_text: The different options to be displayed for the user to pick from
-    :param regex: Regex used to find the valid input
-    :return: The valid user input
-    """
-    while True:
-        # Print the options to the screen
-        print(menu_text)
-        # Get the users input
-        user_choice = input("Select Option: ")
-        # Check the user input against the provided regex
-        re_match = re.fullmatch(regex, user_choice)
-        # If a match is not found - invalid input
-        if re_match is None:
-            print("Invalid Menu Input.")
-            time.sleep(2)
-            clear()
-        # else a match is found - valid input
-        else:
-            return user_choice
-
-
-def read_file(file_name: str) -> list:
-    data = []
-    with open("data/{}.csv".format(file_name)) as f:
-        for line in f:
-            data.append(line[:-1])
-
-    return data
+import utils
 
 
 def main_menu():
@@ -67,15 +22,21 @@ def main_menu():
     :return: None
     """
 
-    clear()
     # Define the regex that will be used to check if the users input to the menu is a valid choice
     valid_options_regex = '[rimaqRIMAQ]'
     # Define the menu string to print
-    menu_options = "• R - Access the Pollution Reporting module\n• I - Access the Mobility Intelligence module\n• M - Access the Real-time Monitoring module\n• A - Print the About text\n• Q - Quit the application"
+    menu_options = "--------------ACQUA System Main Menu--------------\n" \
+                   "• R - Access the Pollution Reporting module\n" \
+                   "• I - Access the Mobility Intelligence module\n" \
+                   "• M - Access the Real-time Monitoring module\n" \
+                   "• A - Print the About text\n" \
+                   "• Q - Quit the application"
     # while loop is used so the user can come back to the main menu and the program not close until they pick quit
     while True:
+        # Clear the console of text
+        utils.clear()
         # Get the user input
-        user_choice = get_valid_user_input(menu_options, valid_options_regex)
+        user_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
         # Open the menu requested by the user
         if user_choice.lower() == 'r':
             reporting_menu()
@@ -105,15 +66,22 @@ def reporting_menu():
     :return: None
     """
 
-    clear()
+    utils.clear()
     # Load all data
-    harlington_data = read_file("Pollution-London Harlington")
-    marylebone_data = read_file("Pollution-London Marylebone Road")
-    kensington_data = read_file("Pollution-London N Kensington")
+    harlington_data = utils.read_file("Pollution-London Harlington")
+    marylebone_data = utils.read_file("Pollution-London Marylebone Road")
+    kensington_data = utils.read_file("Pollution-London N Kensington")
     # List options and get user input
     valid_options_regex = '[dD][mM]|[dhDHmM][aA]|[cfbCFB]'
-    menu_options = "• DA - Calculate the daily average\n• DM - Calculate the daily median\n• HA - Calculate the hourly average\n• MA - Calculate the monthly average\n• C - Count the number of rows with missing data\n• F - Fill missing data rows\n• B - Return to main menu\n"
-    user_choice = get_valid_user_input(menu_options, valid_options_regex)
+    menu_options = "----------ACQUA System Reporting Module-----------\n" \
+                   "• DA - Calculate the daily average\n" \
+                   "• DM - Calculate the daily median\n" \
+                   "• HA - Calculate the hourly average\n" \
+                   "• MA - Calculate the monthly average\n" \
+                   "• C - Count the number of rows with missing data\n" \
+                   "• F - Fill missing data rows\n" \
+                   "• B - Return to main menu\n"
+    user_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
     # Implement options
     if user_choice.lower() == 'da':
         reporting_menu()
@@ -152,8 +120,17 @@ def about():
     Prints the course module code and my candidate number
     :return: None
     """
+    # Clear the console of text
+    utils.clear()
 
-    print("Module Code: ECM1400\nCandidate Number: 720004138")
+    # List the about information and get user input to return to main menu
+    valid_options_regex = ".*"
+    menu_options = "-------------------About ACQUA--------------------\n" \
+                   "Module Code: ECM1400\n" \
+                   "Candidate Number: 720004138\n" \
+                   "• Anykey - Return to main menu"
+
+    utils.get_valid_user_input(menu_options, valid_options_regex)
 
 
 def quit():
@@ -172,4 +149,3 @@ if __name__ == '__main__':
 # Does altering the parameters for a function mess up the automated test?
 # How do I know what format the automated test will input data to the function? For example, the data parameter on the daily_average function, is data expected to be a list or a dictionary or something else?
 # How do I know what format to output data from functions so it is marked correctly?
-
