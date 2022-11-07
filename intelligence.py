@@ -7,40 +7,75 @@
 # g > Upper Threshold and b > Upper Threshold, mark this pixel as cyan
 import numpy as np
 import matplotlib.image as mpimg
-from typing import Union
+from typing import Callable
 import utils
+
+
+def red_pixel_condition(map_file: np.array, upper_threshold: float, lower_threshold: float, x: int, y: int) -> bool:
+    return map_file[x, y, 0] > upper_threshold and map_file[x, y, 1] < lower_threshold and map_file[x, y, 2] < lower_threshold
+
+
+def cyan_pixel_condition(map_file: np.array, upper_threshold: float, lower_threshold: float, x: int, y: int) -> bool:
+    return map_file[x, y, 0] < upper_threshold and map_file[x, y, 1] > lower_threshold and map_file[x, y, 2] > lower_threshold
+
+
+def filter_pixels(map_filename: str, upper_threshold: int, lower_threshold: int, condition_valid_pixel: Callable):
+    map_file = utils.read_image(map_filename)
+    empty_map_file = np.zeros(map_file.shape)
+    width = map_file.shape[0]
+    height = map_file.shape[1]
+    for x in range(width):
+        for y in range(height):
+            if condition_valid_pixel(map_file, upper_threshold, lower_threshold, x, y):
+                empty_map_file[x, y] = np.array([1, 1, 1, 1])
+            else:
+                empty_map_file[x, y] = np.array([0, 0, 0, 1])
+
+    return empty_map_file
 
 
 def find_red_pixels(*args, **kwargs):
     """
     Finds all the red pixels in the input image and saves them to a binary png file
     If, at a pixel, r > Upper Threshold and g < Lower Threshold
-    and b < Lower Threshold, this pixel is marked as red.
-    :param args:
-    :param kwargs:
-    :return:
+    and b < Lower Threshold, this pixel is red.
+
+    :param args: First element contains the name of the image file
+    :param kwargs: upper_threshold and lower_threshold to hold the values used to consider a pixel red
+    :return: An array containing all the binary pixels
     """
+
     map_filename = args[0]
     upper_threshold = kwargs['upper_threshold']/255
     lower_threshold = kwargs['lower_threshold']/255
-    map_file = utils.read_image("map")
-    empty_map_file = np.zeros(map_file.shape)
-    width = map_file.shape[0]
-    height = map_file.shape[1]
-    for x in range(width):
-        for y in range(height):
-            if map_file[x, y, 0] > upper_threshold and map_file[x, y, 1] < lower_threshold and map_file[x, y, 2] < lower_threshold:
-                empty_map_file[x, y] = np.array([1, 1, 1, 1])
-            else:
-                empty_map_file[x, y] = np.array([0, 0, 0, 1])
 
-    mpimg.imsave("test2.png", empty_map_file)
+    new_map = filter_pixels(map_filename, upper_threshold, lower_threshold, red_pixel_condition)
+
+    mpimg.imsave("map-red-pixels.jpg", new_map)
+
+    return new_map
 
 
 def find_cyan_pixels(*args, **kwargs):
-    """Your documentation goes here"""
-    # If, at a pixel, r < Lower Threshold and
-    # g > Upper Threshold and b > Upper Threshold, mark this pixel as cyan
+    """
+    Finds all the cyan pixels in the input image and saves them to a binary png file
+    If, at a pixel, r < Lower Threshold and
+    g > Upper Threshold and b > Upper Threshold, this pixel is cyan
+
+    :param args: First element contains the name of the image file
+    :param kwargs: upper_threshold and lower_threshold to hold the values used to consider a pixel cyan
+    :return: An array containing all the binary pixels
+    """
+
+    map_filename = args[0]
+    upper_threshold = kwargs['upper_threshold']/255
+    lower_threshold = kwargs['lower_threshold']/255
+
+    new_map = filter_pixels(map_filename, upper_threshold, lower_threshold, cyan_pixel_condition)
+
+    mpimg.imsave("map-cyan-pixels.jpg", new_map)
+
+    return new_map
 
 
 def detect_connected_components(*args, **kwargs):

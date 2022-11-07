@@ -27,7 +27,7 @@ def main_menu():
     # Define the regex that will be used to check if the users input to the menu is a valid choice
     valid_options_regex = '[rimaqRIMAQ]'
     # Define the menu string to print
-    menu_options = "--------------ACQUA System Main Menu--------------\n" \
+    menu_options = "--------------AQUA System Main Menu--------------\n" \
                    "• R - Access the Pollution Reporting module\n" \
                    "• I - Access the Mobility Intelligence module\n" \
                    "• M - Access the Real-time Monitoring module\n" \
@@ -75,7 +75,7 @@ def reporting_menu():
     kensington_data = utils.read_file("Pollution-London N Kensington")
     # List options and get user input
     valid_options_regex = '[dD][mM]|[dhDHmM][aA]|[cfbCFB]'
-    menu_options = "----------ACQUA System Reporting Module-----------\n" \
+    menu_options = "----------AQUA System Reporting Module-----------\n" \
                    "• DA - Calculate the daily average\n" \
                    "• DM - Calculate the daily median\n" \
                    "• HA - Calculate the hourly average\n" \
@@ -113,7 +113,9 @@ def intelligence_menu():
     Lists the available options for the intelligence module and gets the user input to perform the requested operation
     :return:
     """
+
     intelligence.find_red_pixels("map", upper_threshold=100, lower_threshold=50)
+    intelligence.find_cyan_pixels("map", upper_threshold=100, lower_threshold=50)
 
 
 def about():
@@ -126,7 +128,7 @@ def about():
 
     # List the about information and get user input to return to main menu
     valid_options_regex = ".*"
-    menu_options = "-------------------About ACQUA--------------------\n" \
+    menu_options = "-------------------About AQUA--------------------\n" \
                    "Module Code: ECM1400\n" \
                    "Candidate Number: 720004138\n" \
                    "• Anykey - Return to main menu"
