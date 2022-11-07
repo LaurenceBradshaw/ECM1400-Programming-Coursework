@@ -1,11 +1,13 @@
 # This is a template. 
 # You should modify the functions below to match
 # the signatures determined by the project specification
+import numpy as np
 import reporting
 import monitoring
 import intelligence
 import sys
 import utils
+import matplotlib.image as mpimg
 
 
 def main_menu():
@@ -62,7 +64,7 @@ def reporting_menu():
     • MA - Calculate the monthly average
     • C - Count the number of rows with missing data
     • F - Fill missing data rows
-    • B - Return to main menu\n
+    • B - Return to main menu
     :return: None
     """
 
@@ -111,8 +113,7 @@ def intelligence_menu():
     Lists the available options for the intelligence module and gets the user input to perform the requested operation
     :return:
     """
-
-    # Your code goes here
+    intelligence.find_red_pixels("map", upper_threshold=100, lower_threshold=50)
 
 
 def about():

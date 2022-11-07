@@ -8,12 +8,33 @@
 import numpy as np
 import matplotlib.image as mpimg
 from typing import Union
+import utils
 
 
 def find_red_pixels(*args, **kwargs):
-    """Your documentation goes here"""
-    # If, at a pixel, r > Upper Threshold and g < Lower Threshold
-    # and b < Lower Threshold, mark this pixel as red.
+    """
+    Finds all the red pixels in the input image and saves them to a binary png file
+    If, at a pixel, r > Upper Threshold and g < Lower Threshold
+    and b < Lower Threshold, this pixel is marked as red.
+    :param args:
+    :param kwargs:
+    :return:
+    """
+    map_filename = args[0]
+    upper_threshold = kwargs['upper_threshold']/255
+    lower_threshold = kwargs['lower_threshold']/255
+    map_file = utils.read_image("map")
+    empty_map_file = np.zeros(map_file.shape)
+    width = map_file.shape[0]
+    height = map_file.shape[1]
+    for x in range(width):
+        for y in range(height):
+            if map_file[x, y, 0] > upper_threshold and map_file[x, y, 1] < lower_threshold and map_file[x, y, 2] < lower_threshold:
+                empty_map_file[x, y] = np.array([1, 1, 1, 1])
+            else:
+                empty_map_file[x, y] = np.array([0, 0, 0, 1])
+
+    mpimg.imsave("test2.png", empty_map_file)
 
 
 def find_cyan_pixels(*args, **kwargs):
