@@ -63,3 +63,5 @@ def rm_function_3(*args, **kwargs):
 def rm_function_4(*args, **kwargs):
     """Your documentation goes here"""
     # Your code goes here
+
+# Get all station names/meta data

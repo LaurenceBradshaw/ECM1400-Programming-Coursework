@@ -12,11 +12,17 @@ import utils
 
 
 def red_pixel_condition(map_file: np.array, upper_threshold: float, lower_threshold: float, x: int, y: int) -> bool:
-    return map_file[x, y, 0] > upper_threshold and map_file[x, y, 1] < lower_threshold and map_file[x, y, 2] < lower_threshold
+    red = map_file[x, y, 0] > upper_threshold
+    green = map_file[x, y, 1] < lower_threshold
+    blue = map_file[x, y, 2] < lower_threshold
+    return red and green and blue
 
 
 def cyan_pixel_condition(map_file: np.array, upper_threshold: float, lower_threshold: float, x: int, y: int) -> bool:
-    return map_file[x, y, 0] < upper_threshold and map_file[x, y, 1] > lower_threshold and map_file[x, y, 2] > lower_threshold
+    red = map_file[x, y, 0] < upper_threshold
+    green = map_file[x, y, 1] > lower_threshold
+    blue = map_file[x, y, 2] > lower_threshold
+    return red and green and blue
 
 
 def filter_pixels(map_filename: str, upper_threshold: int, lower_threshold: int, condition_valid_pixel: Callable):
