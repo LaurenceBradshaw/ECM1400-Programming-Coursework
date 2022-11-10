@@ -4,6 +4,7 @@
 from typing import Union
 import numpy as np
 import matplotlib.image as mpimg
+from skimage import io
 import os
 import time
 import re
@@ -47,7 +48,7 @@ def read_image(img_name: str) -> Union[np.ndarray, None]:
 
     try:
         # Read the image
-        img = mpimg.imread("data/{}.png".format(img_name))
+        img = io.imread("data/{}.png".format(img_name))
     # The file was not found, caused by the user inputting the name of a file that does not exist in the data directory
     except FileNotFoundError:
         return None

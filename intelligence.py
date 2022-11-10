@@ -7,6 +7,7 @@
 # g > Upper Threshold and b > Upper Threshold, mark this pixel as cyan
 import numpy as np
 import matplotlib.image as mpimg
+from skimage import io
 from typing import Callable
 import utils
 
@@ -27,15 +28,15 @@ def cyan_pixel_condition(map_file: np.array, upper_threshold: float, lower_thres
 
 def filter_pixels(map_filename: str, upper_threshold: int, lower_threshold: int, condition_valid_pixel: Callable):
     map_file = utils.read_image(map_filename)
-    empty_map_file = np.zeros(map_file.shape)
     width = map_file.shape[0]
     height = map_file.shape[1]
+    empty_map_file = np.zeros((width, height, 3))
     for x in range(width):
         for y in range(height):
             if condition_valid_pixel(map_file, upper_threshold, lower_threshold, x, y):
-                empty_map_file[x, y] = np.array([1, 1, 1, 1])
+                empty_map_file[x, y] = np.array([1, 1, 1])
             else:
-                empty_map_file[x, y] = np.array([0, 0, 0, 1])
+                empty_map_file[x, y] = np.array([0, 0, 0])
 
     return empty_map_file
 
@@ -52,12 +53,12 @@ def find_red_pixels(*args, **kwargs):
     """
 
     map_filename = args[0]
-    upper_threshold = kwargs['upper_threshold']/255
-    lower_threshold = kwargs['lower_threshold']/255
+    upper_threshold = kwargs['upper_threshold']
+    lower_threshold = kwargs['lower_threshold']
 
     new_map = filter_pixels(map_filename, upper_threshold, lower_threshold, red_pixel_condition)
 
-    mpimg.imsave("map-red-pixels.jpg", new_map)
+    io.imsave("map-red-pixels.jpg", new_map)
 
     return new_map
 
