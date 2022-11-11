@@ -197,11 +197,11 @@ def meannvalue(values):
     return mean
 
 
-def countvalue(values, x):
+def countvalue(values, xw):
     """
     Finds the number of instances of x in the input list/array
     :param values: List/array of values to check for x in
-    :param x: The value to count the number of instances of
+    :param xw: The value to count the number of instances of
     :return: The number of instances of x
     """
 
@@ -209,7 +209,7 @@ def countvalue(values, x):
     x_count = 0
     # For each element in values, if it is equal to x, add 1 to x_count
     for element in values:
-        if element == x:
+        if element == xw:
             x_count += 1
 
     return x_count
