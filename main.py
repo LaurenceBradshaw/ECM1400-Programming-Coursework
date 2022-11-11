@@ -114,7 +114,8 @@ def intelligence_menu():
     :return:
     """
 
-    intelligence.find_red_pixels("map", upper_threshold=100, lower_threshold=50)
+    r = intelligence.find_red_pixels("map", upper_threshold=100, lower_threshold=50)
+    intelligence.detect_connected_components(r)
     intelligence.find_cyan_pixels("map", upper_threshold=100, lower_threshold=50)
 
 
@@ -130,7 +131,7 @@ def about():
     valid_options_regex = ".*"
     menu_options = "-------------------About AQUA--------------------\n" \
                    "Module Code: ECM1400\n" \
-                   "Candidate Number: 720004138\n" \
+                   "Candidate Number: 239766\n" \
                    "• Anykey - Return to main menu"
 
     utils.get_valid_user_input(menu_options, valid_options_regex)
