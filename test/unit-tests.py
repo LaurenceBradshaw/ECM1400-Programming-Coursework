@@ -1,3 +1,4 @@
+import pandas as pd
 import intelligence
 import monitoring
 import reporting
@@ -43,10 +44,12 @@ def test_read_image_with_invalid_file_name():
 
 def test_read_file_with_valid_file_name():
     """
-    Test that the function has found a file and does not return None
+    Test that the function has found a file and does not return None and that the return type is a pandas dataframe
     :return: None
     """
-    assert utils.read_file("Pollution-London Harlington") is not None
+    output = utils.read_file("Pollution-London Harlington.csv")
+    assert output is not None
+    assert type(output) == pd.DataFrame
 
 
 def test_read_file_with_invalid_file_name():
@@ -54,7 +57,7 @@ def test_read_file_with_invalid_file_name():
     Test that the function returns None when given the name of a file that does not exist
     :return: None
     """
-    assert utils.read_file("This file does not exist") is None
+    assert utils.read_file("This file does not exist.csv") is None
 
 
 def test_check_numeric_with_non_numeric_value_present():

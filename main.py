@@ -1,13 +1,76 @@
 # This is a template. 
 # You should modify the functions below to match
 # the signatures determined by the project specification
+import datetime
+import os
+import re
 import numpy as np
 import reporting
 import monitoring
 import intelligence
 import sys
 import utils
-import matplotlib.image as mpimg
+import pandas as pd
+
+# -------------------------
+# My custom functions
+# -------------------------
+
+
+def get_pollutant() -> str:
+    """
+    Lists the options for the different pollutants and gets the users input
+    :return: selected pollutant
+    """
+    valid_options_regex = '[nN][oO]|[pP][mM](10|25)'
+    menu_options = "----------AQUA System Reporting Module-----------\n" \
+                   "Select a pollutant:\n" \
+                   "• NO - Nitric Oxide\n" \
+                   "• PM10 - Particulate Matter 10\n" \
+                   "• PM25 - Particulate Matter 2.5"
+    pollutant = utils.get_valid_user_input(menu_options, valid_options_regex)
+    utils.clear()
+    return pollutant.lower()
+
+
+def get_file(csv_files: list) -> str:
+    valid_options_regex = '[0-9]*'
+    chosen_file = ''
+    while True:
+        menu_options = "----------AQUA System Reporting Module-----------\n" \
+                       "Select a file to use:"
+        for i, file in enumerate(csv_files):
+            menu_options += f'\n[{i}] - {file}'
+        file_index_chosen = utils.get_valid_user_input(menu_options, valid_options_regex)
+        try:
+            chosen_file = csv_files[int(file_index_chosen)]
+            break
+        except IndexError:
+            utils.clear()
+
+    utils.clear()
+    return chosen_file
+
+
+def get_date() -> datetime.datetime:
+    while True:
+        valid_date_regex = '[0-9]{4}-[0-9]{2}-[0-9]{2}'
+        menu_options = "----------AQUA System Reporting Module-----------\n" \
+                       "Enter a date in the form YYYY-MM-DD:"
+
+        user_choice = utils.get_valid_user_input(menu_options, valid_date_regex)
+        try:
+            date = datetime.datetime.fromisoformat(user_choice)
+            break
+        except ValueError:
+            utils.clear()
+
+    return date
+
+
+# -------------------------
+# Template Functions
+# -------------------------
 
 
 def main_menu():
@@ -48,7 +111,7 @@ def main_menu():
             monitoring_menu()
         elif user_choice.lower() == 'a':
             about()
-        else:
+        elif user_choice.lower() == 'q':
             quit()
 
 
@@ -68,35 +131,58 @@ def reporting_menu():
     :return: None
     """
 
-    utils.clear()
-    # Load all data
-    harlington_data = utils.read_file("Pollution-London Harlington")
-    marylebone_data = utils.read_file("Pollution-London Marylebone Road")
-    kensington_data = utils.read_file("Pollution-London N Kensington")
-    # List options and get user input
-    valid_options_regex = '[dD][mM]|[dhDHmM][aA]|[cfbCFB]'
-    menu_options = "----------AQUA System Reporting Module-----------\n" \
-                   "• DA - Calculate the daily average\n" \
-                   "• DM - Calculate the daily median\n" \
-                   "• HA - Calculate the hourly average\n" \
-                   "• MA - Calculate the monthly average\n" \
-                   "• C - Count the number of rows with missing data\n" \
-                   "• F - Fill missing data rows\n" \
-                   "• B - Return to main menu\n"
-    user_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
-    # Implement options
-    if user_choice.lower() == 'da':
-        reporting_menu()
-    elif user_choice.lower() == 'dm':
-        intelligence_menu()
-    elif user_choice.lower() == 'ha':
-        monitoring_menu()
-    elif user_choice.lower() == 'ma':
-        about()
-    elif user_choice.lower() == 'c':
-        about()
-    elif user_choice.lower() == 'f':
-        about()
+    while True:
+        utils.clear()
+        # Loading all data files
+        # Finds all the files in the data directory
+        file_names = os.listdir("data")
+        # Regex to find files that end with .csv
+        csv_regex = re.compile('.*\\.csv')
+        # Gets names of all the csv files in the directory
+        csv_files = list(filter(csv_regex.match, file_names))
+        # Reads each csv into a dictionary of pandas dataframes
+        data = {}
+        for file in csv_files:
+            data[file] = utils.read_file(file)
+
+        # List options and get user input
+        valid_options_regex = '[dD][mM]|[dhDHmM][aA]|[cfbCFB]|[pP][hH]'
+        menu_options = "----------AQUA System Reporting Module-----------\n" \
+                       "Select an operation:\n" \
+                       "• DA - Calculate the daily average\n" \
+                       "• DM - Calculate the daily median\n" \
+                       "• HA - Calculate the hourly average\n" \
+                       "• MA - Calculate the monthly average\n" \
+                       "• PH - Peak value at a specified date\n" \
+                       "• C - Count the number of rows with missing data\n" \
+                       "• F - Fill missing data rows\n" \
+                       "• B - Return to main menu"
+        user_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
+        utils.clear()
+
+        if user_choice.lower() != 'b':
+            chosen_file = get_file(csv_files)
+            pollutant = get_pollutant()
+        else:
+            break
+
+        if user_choice.lower() == 'da':
+            output = reporting.daily_average(data, chosen_file, pollutant)
+            print(output)
+            input()
+        elif user_choice.lower() == 'dm':
+            reporting.daily_median(data, chosen_file, pollutant)
+        elif user_choice.lower() == 'ha':
+            reporting.hourly_average(data, chosen_file, pollutant)
+        elif user_choice.lower() == 'ma':
+            reporting.monthly_average(data, chosen_file, pollutant)
+        elif user_choice.lower() == 'ph':
+            date = get_date()
+            reporting.peak_hour_date(data, date, chosen_file, pollutant)
+        elif user_choice.lower() == 'c':
+            reporting.count_missing_data(data, chosen_file, pollutant)
+        elif user_choice.lower() == 'f':
+            about()
 
 
 def monitoring_menu():
@@ -149,7 +235,3 @@ def quit():
 if __name__ == '__main__':
     main_menu()
 
-# Questions:
-# Does altering the parameters for a function mess up the automated test?
-# How do I know what format the automated test will input data to the function? For example, the data parameter on the daily_average function, is data expected to be a list or a dictionary or something else?
-# How do I know what format to output data from functions so it is marked correctly?

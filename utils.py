@@ -4,10 +4,11 @@
 from typing import Union
 import numpy as np
 import matplotlib.image as mpimg
+import pandas as pd
 from skimage import io
 import os
-import time
 import re
+import datetime
 
 
 # -------------------------
@@ -35,7 +36,7 @@ def check_numeric(values: Union[list, np.array], exception_message: str):
 
     # For each element in values, convert it to a string can check if it is numeric
     for element in values:
-        if not str(element).isnumeric():
+        if type(element) != int and type(element) != float:
             raise ValueError(exception_message)
 
 
@@ -68,38 +69,66 @@ def get_valid_user_input(menu_text: str, regex: str) -> str:
         # Print the options to the screen
         print(menu_text)
         # Get the users input
-        user_choice = input("Select Option: ")
+        user_choice = input("=> ")
         # Check the user input against the provided regex
         re_match = re.fullmatch(regex, user_choice)
-        # If a match is not found - invalid input
+        # If a match is not found - invalid input - clear the console so the menu can be cleanly displayed
         if re_match is None:
-            print("Invalid Menu Input.")
-            time.sleep(2)
             clear()
         # else a match is found - valid input
         else:
             return user_choice
 
 
-def read_file(file_name: str) -> Union[list, None]:
+def read_file(file_name: str) -> Union[pd.DataFrame, None]:
     """
     Reads the file with the specified name in the data directory
+
     :param file_name: Name of the file to read
-    :return: List containing file data
+    :return: Pandas dataframe containing the data
     """
 
     data = []
     try:
         # Read the file
-        with open("data/{}.csv".format(file_name)) as f:
+        with open("data/{}".format(file_name)) as f:
             for line in f:
                 # Append the line to the data list and remove the newline character at the end of the line
-                data.append(line[:-1])
+                data.append(line[:-1].split(','))
     # File was not found
     except FileNotFoundError:
         return None
 
-    return data
+    # Converting the data from the csv into a dictionary:
+    # Remove headings from the data file
+    headings = data.pop(0)
+    # Remove the date and time column headings
+    headings = headings[2:]
+    # Make the headings into dictionary keys with an empty list as the value
+    data_dict = {'datetime': []}
+    for heading in headings:
+        data_dict[heading] = []
+
+    for i in range(len(data)):
+        # Merge the date and time columns into a datetime object
+        date = datetime.date.fromisoformat(data[i][0])
+
+        # Minus an hour from the time to represent the start of the measurement interval instead of the end
+        time_as_list = data[i][1].split(':')
+        time = datetime.time(int(time_as_list[0]) - 1)
+
+        # Combine the date and time objects
+        data_dict['datetime'].append(datetime.datetime.combine(date, time))
+        # Append remaining data to the dictionary
+        for j, heading in enumerate(headings):
+            try:
+                data_dict[heading].append(float(data[i][j + 2]))
+            except ValueError:
+                data_dict[heading].append(data[i][j + 2])
+
+    # Convert the dictionary to a pandas dataframe
+    # Could have read the csv using pandas directly but i felt doing it this way meant the i could convert the date and time columns to a date time object easier
+    return pd.DataFrame(data_dict)
 
 
 # -------------------------
