@@ -191,8 +191,6 @@ def monitoring_menu():
     :return: None
     """
 
-    # Your code goes here
-
 
 def intelligence_menu():
     """

@@ -258,6 +258,17 @@ def count_missing_data(data, monitoring_station: str, pollutant: str):
 
 
 def fill_missing_data(data, new_value, monitoring_station: str, pollutant: str):
-    """Your documentation goes here"""
+    """
+    Will replace all 'No data' entries with the new value
+
+    :param data: Dictionary containing pandas dataframes for each monitoring station
+    :param new_value: The value to replace 'No data' with
+    :param monitoring_station: The monitoring station to use
+    :param pollutant: The pollutant to use
+    :return:
+    """
+    # Gets the correct data for the monitoring station from the data dictionary
     station_data = data[monitoring_station]
+    # Takes just the specified pollutant column from the dataframe
+    date_and_pollutant = station_data[pollutant]
 
