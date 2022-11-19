@@ -85,11 +85,8 @@ def daily_median(data, monitoring_station: str, pollutant: str):
     """
     Finds the median level of the given pollutant per day
     Will omit data values that are 'No data' and notify the user
-    Largest - smallest value of the given pollutant per day
-
-    Example:
-    Largest value of pollutant on 2021-01-01 - smallest value of pollutant on 2021-01-01
-    Excluding values that are 'No data'
+    Order the values smallest to biggest and take the middle one for each day
+    Exclude values that are 'No data'
 
     :param data: Dictionary containing pandas dataframes for each monitoring station
     :param monitoring_station: The monitoring station to use
@@ -112,10 +109,20 @@ def daily_median(data, monitoring_station: str, pollutant: str):
     # For each day in the year, get the values for that day, remove 'No data' and find the median
     for i in range(365):
         day_values = get_time_range(date_and_pollutant, start_date, start_date + time_delta)
-        remove_no_value(day_values)
-        max_value_index = utils.maxvalue(day_values)
-        min_value_index = utils.minvalue(day_values)
-        output.append(day_values[max_value_index] - day_values[min_value_index])
+        remove_no_value(day_values)  # This may change the length of the list so later indexs could be any length
+        sorted_values = utils.sort(day_values)
+        # If there is an odd number of values, an integer middle index can be found
+        if len(sorted_values) % 2 == 1:
+            mid_index = int(len(sorted_values) + 1 / 2)
+            output.append(sorted_values[mid_index])
+        # If there is an even number of values, take the average of the two values either side of the mid index
+        else:
+            mid_index_upper = int(((len(sorted_values) + 1) / 2) + 0.5)
+            mid_index_lower = int(((len(sorted_values) + 1) / 2) - 0.5)
+            upper_value = sorted_values[mid_index_upper]
+            lower_value = sorted_values[mid_index_lower]
+            output.append((upper_value + lower_value)/2)
+        # Get date for next day
         start_date += time_delta
 
     return output

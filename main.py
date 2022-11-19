@@ -33,17 +33,17 @@ def get_pollutant() -> str:
     return pollutant.lower()
 
 
-def get_file(csv_files: list) -> str:
+def get_file(files: list, module_str: str) -> str:
     valid_options_regex = '[0-9]*'
     chosen_file = ''
     while True:
-        menu_options = "----------AQUA System Reporting Module-----------\n" \
+        menu_options = f"---------AQUA System {module_str} Module----------\n" \
                        "Select a file to use:"
-        for i, file in enumerate(csv_files):
+        for i, file in enumerate(files):
             menu_options += f'\n[{i}] - {file}'
         file_index_chosen = utils.get_valid_user_input(menu_options, valid_options_regex)
         try:
-            chosen_file = csv_files[int(file_index_chosen)]
+            chosen_file = files[int(file_index_chosen)]
             break
         except IndexError:
             utils.clear()
@@ -161,7 +161,7 @@ def reporting_menu():
         utils.clear()
 
         if user_choice.lower() != 'b':
-            chosen_file = get_file(csv_files)
+            chosen_file = get_file(csv_files, "Reporting")
             pollutant = get_pollutant()
         else:
             break
@@ -197,10 +197,63 @@ def intelligence_menu():
     Lists the available options for the intelligence module and gets the user input to perform the requested operation
     :return:
     """
+    while True:
+        utils.clear()
+        # Finds all the files in the data directory
+        file_names = os.listdir("data")
+        # Regex to find files that end with .png
+        csv_regex = re.compile('.*\\.png')
+        # Gets names of all the png files in the directory
+        png_file_names = list(filter(csv_regex.match, file_names))
 
-    r = intelligence.find_red_pixels("map", upper_threshold=100, lower_threshold=50)
-    intelligence.detect_connected_components(r)
-    intelligence.find_cyan_pixels("map", upper_threshold=100, lower_threshold=50)
+        # List options and get user input
+        valid_options_regex = '[fF][rRcC]|[sS]?[cC]{2}|[bB]'
+        menu_options = "---------AQUA System Intelligence Module---------\n" \
+                       "Select an operation:\n" \
+                       "• FR - Filter red pixels\n" \
+                       "• FC - Filter cyan pixels\n" \
+                       "• CC - Find connected components\n" \
+                       "• SCC - Find connected components sorted\n" \
+                       "• B - Return to main menu"
+        user_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
+        utils.clear()
+
+        if user_choice.lower() != 'b':
+            file_name = get_file(png_file_names, "Intelligence")
+        else:
+            break
+
+        if user_choice.lower() == 'fr':
+            intelligence.find_red_pixels(file_name, upper_threshold=100, lower_threshold=50)
+        elif user_choice.lower() == 'fc':
+            intelligence.find_cyan_pixels(file_name, upper_threshold=100, lower_threshold=50)
+        elif user_choice.lower() == 'cc':
+            valid_options_regex = '[fF][rRcC]'
+            menu_options = "---------AQUA System Intelligence Module---------\n" \
+                           "Select types of pixel to find connected components for:\n" \
+                           "• FR - Filter red pixels\n" \
+                           "• FC - Filter cyan pixels\n"
+            filter_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
+            if filter_choice.lower() == 'fr':
+                filtered = intelligence.find_red_pixels(file_name, upper_threshold=100, lower_threshold=50)
+            else:
+                filtered = intelligence.find_cyan_pixels(file_name, upper_threshold=100, lower_threshold=50)
+
+            intelligence.detect_connected_components(filtered)
+        elif user_choice.lower() == 'scc':
+            valid_options_regex = '[fF][rRcC]'
+            menu_options = "---------AQUA System Intelligence Module---------\n" \
+                           "Select types of pixel to find connected components for:\n" \
+                           "• FR - Filter red pixels\n" \
+                           "• FC - Filter cyan pixels\n"
+            filter_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
+            if filter_choice.lower() == 'fr':
+                filtered = intelligence.find_red_pixels(file_name, upper_threshold=100, lower_threshold=50)
+            else:
+                filtered = intelligence.find_cyan_pixels(file_name, upper_threshold=100, lower_threshold=50)
+
+            mark = intelligence.detect_connected_components(filtered)
+            intelligence.detect_connected_components_sorted(mark)
 
 
 def about():

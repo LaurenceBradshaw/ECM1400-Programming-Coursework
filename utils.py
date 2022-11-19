@@ -49,7 +49,7 @@ def read_image(img_name: str) -> Union[np.ndarray, None]:
 
     try:
         # Read the image
-        img = io.imread("data/{}.png".format(img_name))
+        img = io.imread("data/{}".format(img_name))
     # The file was not found, caused by the user inputting the name of a file that does not exist in the data directory
     except FileNotFoundError:
         return None
@@ -129,6 +129,24 @@ def read_file(file_name: str) -> Union[pd.DataFrame, None]:
     # Convert the dictionary to a pandas dataframe
     # Could have read the csv using pandas directly but i felt doing it this way meant the i could convert the date and time columns to a date time object easier
     return pd.DataFrame(data_dict)
+
+
+def sort(values: Union[list, np.array]) -> list:
+    """
+    Returns a sorted (smallest to largest) list
+    :param values: list/array to sort
+    :return: sorted list
+    """
+
+    output = []
+    for i in range(len(values)):
+        # Find the smallest value
+        index = minvalue(values)
+        # Append and remove it from the list
+        output.append(values[index])
+        values.pop(index)
+
+    return output
 
 
 # -------------------------
@@ -228,18 +246,18 @@ def meannvalue(values):
 
 def countvalue(values, xw):
     """
-    Finds the number of instances of x in the input list/array
-    :param values: List/array of values to check for x in
+    Finds the number of instances of xw in the input list/array
+    :param values: List/array of values to check for xw in
     :param xw: The value to count the number of instances of
-    :return: The number of instances of x
+    :return: The number of instances of xw
     """
 
-    # Holds the number of occurrences of x found in values
-    x_count = 0
-    # For each element in values, if it is equal to x, add 1 to x_count
+    # Holds the number of occurrences of xw found in values
+    xw_count = 0
+    # For each element in values, if it is equal to xw, add 1 to xw_count
     for element in values:
         if element == xw:
-            x_count += 1
+            xw_count += 1
 
-    return x_count
+    return xw_count
 
