@@ -22,6 +22,7 @@ def get_pollutant() -> str:
     Lists the options for the different pollutants and gets the users input
     :return: selected pollutant
     """
+
     valid_options_regex = '[nN][oO]|[pP][mM](10|25)'
     menu_options = "----------AQUA System Reporting Module-----------\n" \
                    "Select a pollutant:\n" \
@@ -34,6 +35,13 @@ def get_pollutant() -> str:
 
 
 def get_file(files: list, module_str: str) -> str:
+    """
+    Lists files and gets the users input to select one
+    :param files: List of files to display
+    :param module_str: Text to display in the menu heading
+    :return: File name of file selected
+    """
+
     valid_options_regex = '[0-9]*'
     chosen_file = ''
     while True:
@@ -53,6 +61,11 @@ def get_file(files: list, module_str: str) -> str:
 
 
 def get_date() -> datetime.datetime:
+    """
+    Gets the user to enter a date
+    :return: the inputted date as a datetime object
+    """
+
     while True:
         valid_date_regex = '[0-9]{4}-[0-9]{2}-[0-9]{2}'
         menu_options = "----------AQUA System Reporting Module-----------\n" \
@@ -160,12 +173,14 @@ def reporting_menu():
         user_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
         utils.clear()
 
+        # If the user has not chosen to return to the main menu get the file and pollutant that the user wishes to use
         if user_choice.lower() != 'b':
             chosen_file = get_file(csv_files, "Reporting")
             pollutant = get_pollutant()
         else:
             break
 
+        # Find which option the user picked
         if user_choice.lower() == 'da':
             output = reporting.daily_average(data, chosen_file, pollutant)
             print(output)
@@ -188,14 +203,27 @@ def reporting_menu():
 def monitoring_menu():
     """
     Lists the available options for the monitoring module and gets the user input to perform the requested operation
+    ----------------------
+    Options
+    ----------------------
     :return: None
     """
+
+    monitoring.get_monitoring_sites()
 
 
 def intelligence_menu():
     """
     Lists the available options for the intelligence module and gets the user input to perform the requested operation
-    :return:
+    ----------------------
+    Options
+    ----------------------
+    • FR - Filter red pixels
+    • FC - Filter cyan pixels
+    • CC - Find connected components
+    • SCC - Find connected components sorted
+    • B - Return to main menu
+    :return: None
     """
     while True:
         utils.clear()
@@ -218,6 +246,7 @@ def intelligence_menu():
         user_choice = utils.get_valid_user_input(menu_options, valid_options_regex)
         utils.clear()
 
+        # If the user has not chosen to return to the main menu get the map the user wishes to use
         if user_choice.lower() != 'b':
             file_name = get_file(png_file_names, "Intelligence")
         else:
@@ -228,6 +257,7 @@ def intelligence_menu():
         elif user_choice.lower() == 'fc':
             intelligence.find_cyan_pixels(file_name, upper_threshold=100, lower_threshold=50)
         elif user_choice.lower() == 'cc':
+            # Find the type of pixel the user wishes to find connected components for
             valid_options_regex = '[fF][rRcC]'
             menu_options = "---------AQUA System Intelligence Module---------\n" \
                            "Select types of pixel to find connected components for:\n" \
@@ -241,6 +271,7 @@ def intelligence_menu():
 
             intelligence.detect_connected_components(filtered)
         elif user_choice.lower() == 'scc':
+            # Find the type of pixel the user wishes to find connected components for
             valid_options_regex = '[fF][rRcC]'
             menu_options = "---------AQUA System Intelligence Module---------\n" \
                            "Select types of pixel to find connected components for:\n" \

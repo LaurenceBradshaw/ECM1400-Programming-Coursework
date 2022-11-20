@@ -82,18 +82,23 @@ def push_queue(queue: np.array, value) -> np.array:
 def pop_queue(queue: np.array) -> tuple:
     """
     Pops an element from the front of the numpy ndarry queue
+    If given an empty queue pop will return None
 
     :param queue: The queue to pop the value from
     :return: A tuple containing the new queue and the popped value
     """
 
     current_queue_size = queue.shape[0]
-    new_queue = np.zeros((current_queue_size - 1, 2), dtype=int)
+    if current_queue_size != 0:
+        new_queue = np.zeros((current_queue_size - 1, 2), dtype=int)
 
-    for x in range(current_queue_size - 1):
-        new_queue[x] = queue[x + 1]
+        for x in range(current_queue_size - 1):
+            new_queue[x] = queue[x + 1]
 
-    pop = queue[0]
+        pop = queue[0]
+    else:
+        new_queue = np.zeros((0, 2), dtype=int)
+        pop = None
     return new_queue, pop
 
 
@@ -133,9 +138,7 @@ def countvalue_2d(array: np.array, xw):
     xw_count = 0
     # For each element in values, if it is equal to xw, add 1 to xw_count
     for row in array:
-        for element in row:
-            if element == xw:
-                xw_count += 1
+        xw_count += utils.countvalue(row, xw)
 
     return xw_count
 
@@ -325,5 +328,4 @@ def detect_connected_components_sorted(*args, **kwargs):
     top_two_map = filter_pixels(mark, sorted_components[0][0], sorted_components[1][0], top_two_condition)
     # Save the binary image of the top two components as a jpg file
     io.imsave("cc-top-2.jpg", np.uint8(top_two_map))
-    print()
 

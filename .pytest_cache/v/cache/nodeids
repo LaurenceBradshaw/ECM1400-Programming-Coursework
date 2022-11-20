@@ -1,3 +1,4 @@
 [
+  "monitoring.py::test",
   "test/test_reporting.py::test_daily_average"
 ]
