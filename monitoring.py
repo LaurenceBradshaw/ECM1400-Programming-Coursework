@@ -23,112 +23,188 @@ def make_api_call(url: str):
     return res.json()
 
 
-def correct_spaces(data, field, length_of_current, heading):
+def spaces_needed(max, col_max, current):
     """
-    Finds the longest piece of data in a column and will return the number of spaces needed to put after
-    an entry so that the table all lines up
+    Calculates the correct number of spaces for the data in the row
 
-    :param data: Dictionary containing the data
-    :param field: Field to find the spaces for
-    :param length_of_current: Length of the current item
-    :param heading: Heading at the top of the column
-    :return: The number of spaces needed after an entry in the column
+    :param max: Length of the largest element in the column
+    :param col_max: Max valid length of the row
+    :param current: Current element in the row
+    :return: The number of spaces to make the row line up
     """
 
-    # Sets the first longest to the length of the column heading
-    curr_longest = len(heading)
-    # For each site, if the data in the specified field is longer than the current longest, make it the current longest
-    for site in data:
-        if len(site[field]) > curr_longest:
-            curr_longest = len(site[field])
-
-    # Number of spaces to add after the data will be the length of the longest minus the length of the current bit of data
-    spaces = (curr_longest - length_of_current)
-    return spaces if spaces >= 0 else 0
+    # If the largest element in the column is less that the max length a column can be
+    if max < col_max:
+        spaces = max - len(current)
+        return spaces if spaces >= 0 else 0
+    else:
+        spaces = col_max - len(current)
+        return spaces if spaces >= 0 else 0
 
 
-def make_table(data: dict, column_info: list) -> str:
+def make_table(data: dict, column_info: list, row_max: int = 200) -> str:
     """
     Will make a string to print that will be a table of the input data
+    Wraps data onto a new line when the line is longer than the max row length
 
+    :param row_max: Max length of a column before text wraps
     :param data: Data to make table from
     :param column_info: List of tuples containing (Heading name, Dictionary key)
     :return: A string containing the table
     """
 
+    # Remove keys from data that will not be displayed
+    valid_keys = []
+    for element in column_info:
+        valid_keys.append(element[1])
+    for site in data:
+        for key in list(site.keys()):
+            if key not in valid_keys:
+                del site[key]
+
+    # Finds the max length of elements in that column
+    col_max = {}
+    for heading_name, dict_key in column_info:
+        curr_longest = len(heading_name)  # Current longest starts with the heading
+        # For each site, if the data in the specified field is longer than the current longest, make it the current longest
+        for site in data:
+            if len(site[dict_key]) > curr_longest:
+                curr_longest = len(site[dict_key])
+
+        col_max[dict_key] = curr_longest
+
     table_string = ""
     # Creates the headings for the table
     for heading_name, dict_key in column_info:
-        table_string += f"{heading_name}{' ' * correct_spaces(data, dict_key, len(heading_name), heading_name)} | "
+        table_string += f"{heading_name}{' ' * spaces_needed(row_max, col_max[dict_key], heading_name)} | "
 
     # Puts a row of '-' after the heading row
-    table_string += f"\n {'-'*len(table_string)}"
+    table_string += f"\n {'-' * len(table_string)}"
 
     # For each site in the data, append the correct row data to the table string
+    table_string += "\n"
     for site in data:
-        table_string += "\n"
-        for heading_name, dict_key in column_info:
-            table_string += f"{site[dict_key]}{' ' * correct_spaces(data, dict_key, len(site[dict_key]), heading_name)} | "
+
+        # While that site had data left to be displayed
+        while any(value != '' for value in site.values()):
+            for heading_name, dict_key in column_info:
+                if len(site[dict_key]) > row_max:  # There is too much data to display on one line
+                    data_for_row = []
+                    data_split = site[dict_key].split(' ')
+                    # Add elements to data_for_row until it becomes longer than the max length allowed for a row
+                    for element in data_split.copy():
+                        if len(' '.join(data_for_row)) > row_max:  # Got enough data for one row
+                            # Remove the last element because it made the string too long
+                            data_for_row.pop(-1)
+                            # Replace the data with the remaining data
+                            site[dict_key] = ' '.join(data_split)
+                            break
+                        else:
+                            # Add data to the list for the row and remove it from the list
+                            data_for_row.append(element)
+                            data_split.remove(element)
+                    # Add data that will fit for that row
+                    table_string += f"{' '.join(data_for_row)}{' ' * spaces_needed(row_max, col_max[dict_key], ' '.join(data_for_row))} | "
+                else:
+                    table_string += f"{site[dict_key]}{' ' * spaces_needed(row_max, col_max[dict_key], site[dict_key])} | "
+                    site[dict_key] = ''
+            table_string += "\n"
 
     return table_string
 
 
-def get_monitoring_sites():
-    res = make_api_call("Information/MonitoringSites/GroupName=London/Json")
+def get_monitoring_sites(group: str) -> str:
+    """
+    Gets the names, site code, lat, long, open date and close date for all of the sites in a group
+    :param group: Name of the group to get the site info for
+    :return: String to print containing the data in a table
+    """
+
+    res = make_api_call(f"Information/MonitoringSites/GroupName={group}/Json")
     data = res['Sites']['Site']
     column_info = [("Site Name", "@SiteName"), ("Site Code", "@SiteCode"), ("Longitude", "@Longitude"), ("Latitude", "@Latitude"), ("Opened", "@DateOpened"), ("Closed", "@DateClosed")]
     table = make_table(data, column_info)
-    print(table)
+    return table
 
 
-def get_groups():
+def get_groups() -> str:
+    """
+    Gets the names and description for all of the groups that contain sites
+    :return: String to print containing the data in a table
+    """
+
     res = make_api_call("/Information/Groups/Json")
     data = res['Groups']['Group']
     column_info = [("Group Name", "@GroupName"), ("Description", "@Description"), ("URL", "@WebsiteURL")]
-    table = make_table(data, column_info)
-    print(table)
+    table = make_table(data, column_info, 80)
+    return table
 
 
-def test():
-    res = make_api_call(f"/Data/SiteSpecies/SiteCode=MY1/SpeciesCode=NO/StartDate={datetime.date.today()}/EndDate={datetime.date.today() + datetime.timedelta(days=1)}/Json")
-    # res = make_api_call("/Information/Species/Json")
-    # res = make_api_call(f"/Data/Site/SiteCode=MY1/StartDate={datetime.date.today()}/EndDate={datetime.date.today() + datetime.timedelta(days=1)}/Json")
-    print()
-
-
-def get_live_data_from_api(site_code='MY1', species_code='NO', start_date=None, end_date=None):
+def get_current_data(start_date: datetime.date, end_date: datetime.date, site_code: str) -> list[dict]:
     """
-    Return data from the LondonAir API using its AirQuality API. 
-    
-    *** This function is provided as an example of how to retrieve data from the API. ***
-    It requires the `requests` library which needs to be installed. 
-    In order to use this function you first have to install the `requests` library.
-    This code is provided as-is. 
+    Gets data from the specified site between the given dates
+
+    :param start_date: Date to start getting data for
+    :param end_date: Date to stop getting data for
+    :param site_code: Site to get data from
+    :return: List of dictionaries containing the data
     """
-    start_date = datetime.date.today() if start_date is None else start_date
-    end_date = start_date + datetime.timedelta(days=1) if end_date is None else end_date
 
-    # /Data/SiteSpecies/SiteCode={SiteCode}/SpeciesCode={SpeciesCode}/StartDate={StartDate}/EndDate={EndDate}/Period={Period}/Units={Units}/Step={Step}/Json
-    # This returns raw data based on 'SiteCode', 'SpeciesCode', 'StartDate', 'EndDate'. Default time period is 'hourly'. Data returned in JSON format
-    # endpoint = "https://api.erg.ic.ac.uk/AirQuality/Data/SiteSpecies/SiteCode={site_code}/SpeciesCode={species_code}/StartDate={start_date}/EndDate={end_date}/Json"
-    #
-    # url = endpoint.format(
-    #     site_code=site_code,
-    #     species_code=species_code,
-    #     start_date=start_date,
-    #     end_date=end_date
-    # )
+    # Get data for the three pollutant types between the given dates for the given site
+    res_no = make_api_call(f"/Data/SiteSpecies/SiteCode={site_code}/SpeciesCode=NO/StartDate={start_date}/EndDate={end_date}/Json")['RawAQData']['Data']
+    # Rename @value key to @no and delete the @value key
+    for entry in res_no:
+        entry['@no'] = entry['@Value']
+        del entry['@Value']
+        if entry['@no'] == '':
+            entry['@no'] = 'No data'
+    res_pm10 = make_api_call(f"/Data/SiteSpecies/SiteCode={site_code}/SpeciesCode=PM10/StartDate={start_date}/EndDate={end_date}/Json")['RawAQData']['Data']
+    for entry in res_pm10:
+        entry['@pm10'] = entry['@Value']
+        del entry['@Value']
+        if entry['@pm10'] == '':
+            entry['@pm10'] = 'No data'
+    res_pm25 = make_api_call(f"/Data/SiteSpecies/SiteCode={site_code}/SpeciesCode=PM25/StartDate={start_date}/EndDate={end_date}/Json")['RawAQData']['Data']
+    for entry in res_pm25:
+        entry['@pm25'] = entry['@Value']
+        del entry['@Value']
+        if entry['@pm25'] == '':
+            entry['@pm25'] = 'No data'
 
-    # endpoint = "http://api.erg.ic.ac.uk/AirQuality/Information/News/Skip={SKIP}/limit={LIMIT}/Json"
-    # url = endpoint.format(
-    #     SKIP=1,
-    #     LIMIT=5
-    # )
-    url = "http://api.erg.ic.ac.uk/AirQuality/Information/MonitoringSites/GroupName={GroupName}/Json"
-    url = url.format(GroupName="London")
+    # Merge all the dictionaries into one
+    data = []
+    for i in range(len(res_no)):
+        data.append(res_no[i] | res_pm10[i] | res_pm25[i])
 
-    res = requests.get(url)
-    return res.json()
+    return data
 
 
-get_groups()
+def save(data: list[dict], file_name: str):
+    """
+    Takes input data in the format that the get_current_data will give and saves it to a .csv file
+    so that it can be used in other parts of the AQUA System
+
+    :param data: Data to save to csv
+    :param file_name: Name to give csv
+    :return: None
+    """
+
+    with open('data/' + file_name, "w") as f:
+        # Write headings
+        f.write("date,time,no,pm10,pm25\n")
+
+        for element in data:
+            line = ''
+            date_and_time = element['@MeasurementDateGMT'].split(' ')
+            line += date_and_time[0]  # Split the date into the date and time then write
+            time = date_and_time[1].split(':')
+            time[0] = str(int(time[0]) + 1)
+            line += ',' + ':'.join(time)
+            line += ',' + element['@no']
+            line += ',' + element['@pm10']
+            line += ',' + element['@pm25']
+            f.write(line + '\n')
+
+
+# save(get_current_data(datetime.date(year=2021, month=1, day=1), datetime.date(year=2022, month=1, day=1), "KC1"), 'test_save.csv')
+# print(get_monitoring_sites("London"))
