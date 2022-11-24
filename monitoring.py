@@ -42,12 +42,12 @@ def spaces_needed(max, col_max, current):
         return spaces if spaces >= 0 else 0
 
 
-def make_table(data: dict, column_info: list, row_max: int = 200) -> str:
+def make_table(data: dict, column_info: list, wrap: int = 200) -> str:
     """
     Will make a string to print that will be a table of the input data
     Wraps data onto a new line when the line is longer than the max row length
 
-    :param row_max: Max length of a column before text wraps
+    :param wrap: Max length of a column before text wraps
     :param data: Data to make table from
     :param column_info: List of tuples containing (Heading name, Dictionary key)
     :return: A string containing the table
@@ -67,50 +67,77 @@ def make_table(data: dict, column_info: list, row_max: int = 200) -> str:
     for heading_name, dict_key in column_info:
         curr_longest = len(heading_name)  # Current longest starts with the heading
         # For each site, if the data in the specified field is longer than the current longest, make it the current longest
-        for site in data:
-            if len(site[dict_key]) > curr_longest:
-                curr_longest = len(site[dict_key])
+        for element in data:
+            if len(element[dict_key]) > curr_longest:
+                curr_longest = len(element[dict_key])
 
         col_max[dict_key] = curr_longest
 
     table_string = ""
     # Creates the headings for the table
     for heading_name, dict_key in column_info:
-        table_string += f"{heading_name}{' ' * spaces_needed(row_max, col_max[dict_key], heading_name)} | "
+        table_string += f"{heading_name}{' ' * spaces_needed(wrap, col_max[dict_key], heading_name)} | "
 
     # Puts a row of '-' after the heading row
     table_string += f"\n {'-' * len(table_string)}"
 
     # For each site in the data, append the correct row data to the table string
     table_string += "\n"
-    for site in data:
+    for element in data:
 
-        # While that site had data left to be displayed
-        while any(value != '' for value in site.values()):
+        # While that element had data left to be displayed
+        while any(value != '' for value in element.values()):
             for heading_name, dict_key in column_info:
-                if len(site[dict_key]) > row_max:  # There is too much data to display on one line
+                if len(element[dict_key]) > wrap:  # There is too much data to display on one line
                     data_for_row = []
-                    data_split = site[dict_key].split(' ')
-                    # Add elements to data_for_row until it becomes longer than the max length allowed for a row
-                    for element in data_split.copy():
-                        if len(' '.join(data_for_row)) > row_max:  # Got enough data for one row
-                            # Remove the last element because it made the string too long
+                    data_split = element[dict_key].split(' ')
+                    # Add segments to data_for_row until it becomes longer than the max length allowed for a row
+                    for segments in data_split.copy():
+                        if len(' '.join(data_for_row)) > wrap:  # Got enough data for one row
+                            # Remove the last segment because it made the string too long
                             data_for_row.pop(-1)
                             # Replace the data with the remaining data
-                            site[dict_key] = ' '.join(data_split)
+                            element[dict_key] = ' '.join(data_split)
                             break
                         else:
                             # Add data to the list for the row and remove it from the list
-                            data_for_row.append(element)
-                            data_split.remove(element)
+                            data_for_row.append(segments)
+                            data_split.remove(segments)
                     # Add data that will fit for that row
-                    table_string += f"{' '.join(data_for_row)}{' ' * spaces_needed(row_max, col_max[dict_key], ' '.join(data_for_row))} | "
+                    table_string += f"{' '.join(data_for_row)}{' ' * spaces_needed(wrap, col_max[dict_key], ' '.join(data_for_row))} | "
                 else:
-                    table_string += f"{site[dict_key]}{' ' * spaces_needed(row_max, col_max[dict_key], site[dict_key])} | "
-                    site[dict_key] = ''
+                    table_string += f"{element[dict_key]}{' ' * spaces_needed(wrap, col_max[dict_key], element[dict_key])} | "
+                    element[dict_key] = ''
             table_string += "\n"
 
     return table_string
+
+
+def add_row(element, dict_key, wrap, col_max):
+    """
+    WIP
+    :param element:
+    :param dict_key:
+    :param wrap:
+    :param col_max:
+    :return:
+    """
+    data_for_row = []
+    data_split = element[dict_key].split(' ')
+    # Add segments to data_for_row until it becomes longer than the max length allowed for a row
+    for segments in data_split.copy():
+        if len(' '.join(data_for_row)) > wrap:  # Got enough data for one row
+            # Remove the last segment because it made the string too long
+            data_for_row.pop(-1)
+            # Replace the data with the remaining data
+            element[dict_key] = ' '.join(data_split)
+            break
+        else:
+            # Add data to the list for the row and remove it from the list
+            data_for_row.append(segments)
+            data_split.remove(segments)
+    # Add data that will fit for that row
+    return f"{' '.join(data_for_row)}{' ' * spaces_needed(wrap, col_max[dict_key], ' '.join(data_for_row))} | "
 
 
 def get_monitoring_sites(group: str) -> str:
