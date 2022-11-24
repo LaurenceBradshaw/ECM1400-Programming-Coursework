@@ -276,6 +276,10 @@ def fill_missing_data(data, new_value, monitoring_station: str, pollutant: str):
     """
     # Gets the correct data for the monitoring station from the data dictionary
     station_data = data[monitoring_station]
-    # Takes just the specified pollutant column from the dataframe
-    date_and_pollutant = station_data[pollutant]
+    # Replaces all values in the given pollutant column which are 'No data' with the new value
+    station_data[pollutant] = station_data[pollutant].replace(['No data'], float(new_value))
+
+    # Puts the new dataframe back into the data and returns it
+    data[monitoring_station] = station_data
+    return data
 
