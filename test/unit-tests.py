@@ -1,4 +1,3 @@
-import pandas as pd
 import intelligence
 import monitoring
 import reporting
@@ -162,7 +161,7 @@ def test_read_file_with_valid_file_name():
     """
     output = utils.read_file("Pollution-London Harlington.csv")
     assert output is not None
-    assert type(output) == pd.DataFrame
+    assert type(output) == list
 
 
 def test_read_file_with_invalid_file_name():
@@ -174,12 +173,20 @@ def test_read_file_with_invalid_file_name():
 
 
 def test_check_numeric_with_non_numeric_value_present():
+    """
+    Test that the function raises an error when a non-numeric value is present
+    :return: None
+    """
     values = [1, 2, 3, '5', 'w']
     with pytest.raises(ValueError):
         utils.check_numeric(values, "")
 
 
 def test_check_numeric_without_non_numeric_value_present():
+    """
+    Test that the function does not raise an error when no non-numeric values are present
+    :return: None
+    """
     values = [1, 2, 3]
     try:
         utils.check_numeric(values, "")
@@ -188,6 +195,10 @@ def test_check_numeric_without_non_numeric_value_present():
 
 
 def test_sumvalues_correctly_sums_values():
+    """
+    Test that the function is summing values correctly
+    :return: None
+    """
     values = [5, 3, 4, 7, 8]
     sum = 27
 
@@ -195,6 +206,10 @@ def test_sumvalues_correctly_sums_values():
 
 
 def test_maxvalue_returns_correct_index_of_max_value():
+    """
+    Test that the function returns the correct index for the largest value in the list
+    :return: None
+    """
     values = [5, 3, 9, 7, 8]
     index = 2
 
@@ -202,6 +217,10 @@ def test_maxvalue_returns_correct_index_of_max_value():
 
 
 def test_minvalue_returns_correct_index_of_min_value():
+    """
+    Test that the function returns the correct index for the smallest value in the list
+    :return: None
+    """
     values = [5, 3, 9, 7, 8]
     index = 1
 
@@ -209,6 +228,10 @@ def test_minvalue_returns_correct_index_of_min_value():
 
 
 def test_meanvalue_returns_correct_mean():
+    """
+    Test the function calculates the mean of the list correctly
+    :return:
+    """
     values = [5, 3, 9, 7, 8]
     mean = 6.4
 
@@ -216,6 +239,10 @@ def test_meanvalue_returns_correct_mean():
 
 
 def test_meanvalue_handles_input_of_length_zero():
+    """
+    Test the function can calculate a mean with an empty list with no error
+    :return: None
+    """
     values = []
     mean = 0
 
@@ -223,6 +250,10 @@ def test_meanvalue_handles_input_of_length_zero():
 
 
 def test_countvalue_returns_zero_when_x_is_not_present():
+    """
+    Test the function can count the number of instances of a value when there are non present in the list
+    :return: None
+    """
     values = [1, 1, 2, 2, 3, 6, 4, 3, 3, 3, 2]
     x = 5
     count = 0
@@ -231,6 +262,10 @@ def test_countvalue_returns_zero_when_x_is_not_present():
 
 
 def test_countvalue_returns_correctly_when_x_is_present():
+    """
+    Test the function returns the correct number of instances of a value in the list
+    :return: None
+    """
     values = [1, 1, 2, 2, 3, 6, 4, 3, 3, 3, 2]
     x = 2
     count = 3
