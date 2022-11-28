@@ -2,13 +2,11 @@
 # You should modify the functions below to match
 # the signatures determined by the project specification
 from typing import Union
+import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib.image as mpimg
-import pandas as pd
-from skimage import io
 import os
-import re
 import datetime
+import csv
 
 
 # -------------------------
@@ -40,95 +38,33 @@ def check_numeric(values: Union[list, np.array], exception_message: str):
             raise ValueError(exception_message)
 
 
-def read_image(img_name: str) -> Union[np.ndarray, None]:
-    """
-    Reads the image located by the image name in the data folder into an ndarray
-    :param img_name: name for the image being read
-    :return: returns an ndarray containing RGBA values for each pixel if the file was found and read or None if it wasn't
-    """
-
-    try:
-        # Read the image
-        img = io.imread("data/{}".format(img_name))
-    # The file was not found, caused by the user inputting the name of a file that does not exist in the data directory
-    except FileNotFoundError:
-        return None
-    return img
-
-
-def get_valid_user_input(menu_text: str, regex: str) -> str:
-    """
-    Used to get a valid response from a user for a menu
-
-    :param menu_text: The different options to be displayed for the user to pick from
-    :param regex: Regex used to find the valid input
-    :return: The valid user input
-    """
-
-    while True:
-        # Print the options to the screen
-        print(menu_text)
-        # Get the users input
-        user_choice = input("=> ")
-        # Check the user input against the provided regex
-        re_match = re.fullmatch(regex, user_choice)
-        # If a match is not found - invalid input - clear the console so the menu can be cleanly displayed
-        if re_match is None:
-            clear()
-        # else a match is found - valid input
-        else:
-            return user_choice
-
-
-def read_file(file_name: str) -> Union[pd.DataFrame, None]:
-    """
-    Reads the file with the specified name in the data directory
-
-    :param file_name: Name of the file to read
-    :return: Pandas dataframe containing the data
-    """
-
-    data = []
+def read_file(file_name: str) -> Union[list[dict], None]:
     try:
         # Read the file
         with open("data/{}".format(file_name)) as f:
-            for line in f:
-                # Append the line to the data list and remove the newline character at the end of the line
-                data.append(line[:-1].split(','))
+            data = [{key: value for key, value in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
     # File was not found
     except FileNotFoundError:
         return None
 
-    # Converting the data from the csv into a dictionary:
-    # Remove headings from the data file
-    headings = data.pop(0)
-    # Remove the date and time column headings
-    headings = headings[2:]
-    # Make the headings into dictionary keys with an empty list as the value
-    data_dict = {'datetime': []}
-    for heading in headings:
-        data_dict[heading] = []
+    # Merge date and time fields into datetime objects
+    for d in data:
+        date = datetime.date.fromisoformat(d['date'])
 
-    for i in range(len(data)):
-        # Merge the date and time columns into a datetime object
-        date = datetime.date.fromisoformat(data[i][0])
-
-        # Minus an hour from the time to represent the start of the measurement interval instead of the end
-        time_as_list = data[i][1].split(':')
+        time_as_list = d['time'].split(':')
         time = datetime.time(int(time_as_list[0]) - 1)
 
-        # Combine the date and time objects
-        data_dict['datetime'].append(datetime.datetime.combine(date, time))
-        # Append remaining data to the dictionary
-        for j, heading in enumerate(headings):
-            try:
-                data_dict[heading].append(float(data[i][j + 2]))
-            except ValueError:
-                data_dict[heading].append(data[i][j + 2])
+        d['datetime'] = datetime.datetime.combine(date, time)
 
-    # Convert the dictionary to a pandas dataframe
-    # Could have read the csv using pandas directly but i felt doing it this way meant the i could convert the date and time columns to a date time object easier
-    return pd.DataFrame(data_dict)
+    return data
+
+
+def read_image(file_name: str) -> Union[np.ndarray, None]:
+    try:
+        img = plt.imread(f"data/{file_name}")
+        return img
+    except FileNotFoundError:
+        return None
 
 
 def sort(values: Union[list, np.array]) -> list:
@@ -147,6 +83,12 @@ def sort(values: Union[list, np.array]) -> list:
         values.pop(index)
 
     return output
+
+
+def remove_no_value(data: list):
+    for element in data.copy():
+        if element == "No data":
+            data.remove(element)
 
 
 # -------------------------

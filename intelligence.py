@@ -1,10 +1,10 @@
-# This is a template. 
+# This is a template.
 # You should modify the functions below to match
 # the signatures determined by the project specification
-import numpy as np
-from skimage import io
 from typing import Callable
 import utils
+import numpy as np
+from matplotlib import pyplot as plt
 
 
 # -------------------------
@@ -13,6 +13,20 @@ import utils
 
 
 def red_pixel_condition(map_file: np.array, upper_threshold: int, lower_threshold: int, x: int, y: int) -> bool:
+    """
+    ---------------
+    Description
+    ---------------
+    Will evaluate a given pixel for being red
+
+    :param map_file: Array containing map data
+    :param upper_threshold: Value of the upper threshold
+    :param lower_threshold: Value of the lower threshold
+    :param x: x coordinate for the pixel currently being evaluated
+    :param y: y coordinate for the pixel currently being evaluated
+    :return: Boolean value for whether the condition is valid or not
+    """
+
     red = map_file[x, y, 0] > upper_threshold
     green = map_file[x, y, 1] < lower_threshold
     blue = map_file[x, y, 2] < lower_threshold
@@ -20,6 +34,19 @@ def red_pixel_condition(map_file: np.array, upper_threshold: int, lower_threshol
 
 
 def cyan_pixel_condition(map_file: np.array, upper_threshold: int, lower_threshold: int, x: int, y: int) -> bool:
+    """
+    ---------------
+    Description
+    ---------------
+    Will evaluate a given pixel for being cyan
+
+    :param map_file: Array containing map data
+    :param upper_threshold: Value of the upper threshold
+    :param lower_threshold: Value of the lower threshold
+    :param x: x coordinate for the pixel currently being evaluated
+    :param y: y coordinate for the pixel currently being evaluated
+    :return: Boolean value for whether the condition is valid or not
+    """
     red = map_file[x, y, 0] < upper_threshold
     green = map_file[x, y, 1] > lower_threshold
     blue = map_file[x, y, 2] > lower_threshold
@@ -27,6 +54,20 @@ def cyan_pixel_condition(map_file: np.array, upper_threshold: int, lower_thresho
 
 
 def top_two_condition(map_file: np.array, upper_threshold: int, lower_threshold: int, x: int, y: int) -> bool:
+    """
+    ---------------
+    Description
+    ---------------
+    Will evaluate a given pixel for it to be either the upper or lower threshold
+    This is a rather hacky use of existing code :)
+
+    :param map_file: Array containing map data
+    :param upper_threshold: Value of first valid pixel
+    :param lower_threshold: Value of second valid pixel
+    :param x: x coordinate for the pixel currently being evaluated
+    :param y: y coordinate for the pixel currently being evaluated
+    :return: Boolean value for whether the condition is valid or not
+    """
     if map_file[x, y] == upper_threshold or map_file[x, y] == lower_threshold:
         return True
     return False
@@ -34,7 +75,17 @@ def top_two_condition(map_file: np.array, upper_threshold: int, lower_threshold:
 
 def filter_pixels(map_file: np.array, upper_threshold: int, lower_threshold: int, condition_valid_pixel: Callable) -> np.array:
     """
-    Iterates over all the pixels in the input image and creates an ndarry to store a binary image of pixels that satisfy the given condition
+    ---------------
+    Description
+    ---------------
+    Will filter pixels into a binary image based on a condition
+
+    ---------------
+    General Overview
+    ---------------
+    Create empty np array to store binary pixels
+    For each pixel
+    If it satisfies the condition, add it to the binary image
 
     :param map_file: Numpy array containing the map
     :param upper_threshold: Upper threshold to consider that a pixel has a big enough value for either R, G or B
@@ -61,6 +112,9 @@ def filter_pixels(map_file: np.array, upper_threshold: int, lower_threshold: int
 
 def push_queue(queue: np.array, value) -> np.array:
     """
+    ---------------
+    Description
+    ---------------
     Appends an element to the numpy ndarry queue
 
     :param queue: The queue to append to
@@ -81,6 +135,9 @@ def push_queue(queue: np.array, value) -> np.array:
 
 def pop_queue(queue: np.array) -> tuple:
     """
+    ---------------
+    Description
+    ---------------
     Pops an element from the front of the numpy ndarry queue
     If given an empty queue pop will return None
 
@@ -104,8 +161,17 @@ def pop_queue(queue: np.array) -> tuple:
 
 def find_neighbours(s: int, t: int, img_width: int, img_height: int) -> list:
     """
+    ---------------
+    Description
+    ---------------
     Finds all the 8 adjacent pixels to s and t
     Also makes sure that the pixel is within the bounds of the image
+
+    ---------------
+    General Overview
+    ---------------
+    Get all adjacent pixels
+    Evaluate whether they are within the bound of the picture
 
     :param s: Row number for the pixel
     :param t: Column number for the pixel
@@ -128,6 +194,9 @@ def find_neighbours(s: int, t: int, img_width: int, img_height: int) -> list:
 
 def countvalue_2d(array: np.array, xw):
     """
+    ---------------
+    Description
+    ---------------
     Finds the number of instances of xw in the input 2d array
 
     :param array: 2d numpy array to find instances in
@@ -147,9 +216,11 @@ def countvalue_2d(array: np.array, xw):
 # Template Functions
 # -------------------------
 
-
 def find_red_pixels(*args, **kwargs):
     """
+    ---------------
+    Description
+    ---------------
     Finds all the red pixels in the input image and saves them to a binary png file
     If, at a pixel, r > Upper Threshold and g < Lower Threshold
     and b < Lower Threshold, this pixel is red.
@@ -163,18 +234,21 @@ def find_red_pixels(*args, **kwargs):
     lower_threshold = kwargs['lower_threshold']
 
     # Load the image
-    map_file = utils.read_image(map_filename)
+    map_file = utils.read_image(map_filename) * 255
     # Get all red pixels from the image
     new_map = filter_pixels(map_file, upper_threshold, lower_threshold, red_pixel_condition)
 
     # Save the binary image array as a jpg file
-    io.imsave("map-red-pixels.jpg", np.uint8(new_map))
+    plt.imsave("map-red-pixels.jpg", np.uint8(new_map))
 
     return new_map
 
 
 def find_cyan_pixels(*args, **kwargs):
     """
+    ---------------
+    Description
+    ---------------
     Finds all the cyan pixels in the input image and saves them to a binary png file
     If, at a pixel, r < Lower Threshold and
     g > Upper Threshold and b > Upper Threshold, this pixel is cyan
@@ -189,18 +263,21 @@ def find_cyan_pixels(*args, **kwargs):
     lower_threshold = kwargs['lower_threshold']
 
     # Load the image
-    map_file = utils.read_image(map_filename)
+    map_file = utils.read_image(map_filename) * 255
     # Get all cyan pixels from the image
     new_map = filter_pixels(map_file, upper_threshold, lower_threshold, cyan_pixel_condition)
 
     # Save the binary image array as a jpg file
-    io.imsave("map-cyan-pixels.jpg", np.uint8(new_map))
+    plt.imsave("map-cyan-pixels.jpg", np.uint8(new_map))
 
     return new_map
 
 
 def detect_connected_components(*args, **kwargs):
     """
+    ---------------
+    Description
+    ---------------
     Detects all of the connected components in the input image
     Gives each connected component a number and counts the number of pixels in the component
     Writes the output to a txt file called cc-output-2a.txt
@@ -278,6 +355,9 @@ def detect_connected_components(*args, **kwargs):
 
 def detect_connected_components_sorted(*args, **kwargs):
     """
+    ---------------
+    Description
+    ---------------
     Uses MARK from detect_connected_components function and orders the connected components largest to smallest
     Writes the output to "cc-output-2b.txt"
     Write the top two components to "cc-top-2.jpg"
@@ -327,5 +407,4 @@ def detect_connected_components_sorted(*args, **kwargs):
     # Very hacked together use of the filter_pixels function :)
     top_two_map = filter_pixels(mark, sorted_components[0][0], sorted_components[1][0], top_two_condition)
     # Save the binary image of the top two components as a jpg file
-    io.imsave("cc-top-2.jpg", np.uint8(top_two_map))
-
+    plt.imsave("cc-top-2.jpg", np.uint8(top_two_map))

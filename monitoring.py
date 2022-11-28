@@ -7,45 +7,93 @@
 # 
 # You can access the API documentation here http://api.erg.ic.ac.uk/AirQuality/help
 #
+import csv
 import requests
 import datetime
+import math
+import utils
+
+# -------------------------
+# Data presentation functions
+# -------------------------
 
 
-def make_api_call(url: str):
+def add_row(element: dict, column_info: list, wrap: int, col_max: dict) -> str:
     """
-    Takes the last part of the url to make the API call
+    ---------------
+    Description
+    ---------------
+    Adds a row for a given bit of data
+    Data that is longer than wrap will wrap onto the next line
 
-    :param url: Remaining part of the url
-    :return: Response from API
+    ---------------
+    General Overview
+    ---------------
+    While there is still data to display for this row
+    Find the amount of data that will fit on this row
+    Append it to the row
+    Remove the appended data from the data left to display on this row
+
+    ---------------
+    WARNING
+    ---------------
+    If the data contains an element that, when split by spaces, is longer than wrap, an infinite loop will be encountered
+
+    :param element: Dictionary containing all data to display on this row
+    :param column_info: List of column headings and dict keys associated with them
+    :param wrap: Max length a line in row can be before the data will be wrapped onto the next line
+    :param col_max: Length of longest element in each column
+    :return: Row to append to table
     """
-    url = f"http://api.erg.ic.ac.uk/AirQuality/{url}"
-    res = requests.get(url)
-    return res.json()
+    row = ''
+    # While that element had data left to be displayed
+    while any(value != '' for value in element.values()):
+        # For each column
+        for heading_name, dict_key in column_info:
+            data_for_row = []
+            data_split = element[dict_key].split(' ')  # Split the data for this column up by spaces
+            # Add segments to data_for_row until it becomes longer than the max length allowed for a row or all data has been used
+            for segments in data_split.copy():
+                data_for_row.append(segments)
+                length_joined = len(' '.join(data_for_row))
+                if length_joined > wrap:  # Got enough data for one row
+                    # Remove the last segment because it made the string too long
+                    data_for_row.pop(-1)
+                    # Replace the data with the remaining data
+                    element[dict_key] = ' '.join(data_split)
+                    break
+                else:
+                    # Add data to the list for the row and remove it from the list
+                    data_split.remove(segments)
+
+            if len(data_split) == 0:  # When there is no remaining data for this column set the data in the dict to ''
+                element[dict_key] = ''
+
+            # Add data that will fit for that row
+            if col_max[dict_key] > wrap:
+                row += f"{' '.join(data_for_row):<{wrap}} | "
+            else:
+                row += f"{' '.join(data_for_row):<{col_max[dict_key]}} | "
+        row += '\n'
+
+    return row
 
 
-def spaces_needed(max, col_max, current):
+def make_table(data: list[dict], column_info: list[tuple], wrap: int = 200) -> str:
     """
-    Calculates the correct number of spaces for the data in the row
-
-    :param max: Length of the largest element in the column
-    :param col_max: Max valid length of the row
-    :param current: Current element in the row
-    :return: The number of spaces to make the row line up
-    """
-
-    # If the largest element in the column is less that the max length a column can be
-    if max < col_max:
-        spaces = max - len(current)
-        return spaces if spaces >= 0 else 0
-    else:
-        spaces = col_max - len(current)
-        return spaces if spaces >= 0 else 0
-
-
-def make_table(data: dict, column_info: list, wrap: int = 200) -> str:
-    """
+    ---------------
+    Description
+    ---------------
     Will make a string to print that will be a table of the input data
     Wraps data onto a new line when the line is longer than the max row length
+
+    ---------------
+    General Overview
+    ---------------
+    Remove keys from the data that are not going to be displayed
+    Find the length of the longest entry in each column
+    Make headings
+    Add rows to the table
 
     :param wrap: Max length of a column before text wraps
     :param data: Data to make table from
@@ -57,12 +105,12 @@ def make_table(data: dict, column_info: list, wrap: int = 200) -> str:
     valid_keys = []
     for element in column_info:
         valid_keys.append(element[1])
-    for site in data:
-        for key in list(site.keys()):
+    for d in data:
+        for key in list(d.keys()):
             if key not in valid_keys:
-                del site[key]
+                del d[key]
 
-    # Finds the max length of elements in that column
+    # Finds the length of longest elements in each column
     col_max = {}
     for heading_name, dict_key in column_info:
         curr_longest = len(heading_name)  # Current longest starts with the heading
@@ -76,73 +124,174 @@ def make_table(data: dict, column_info: list, wrap: int = 200) -> str:
     table_string = ""
     # Creates the headings for the table
     for heading_name, dict_key in column_info:
-        table_string += f"{heading_name}{' ' * spaces_needed(wrap, col_max[dict_key], heading_name)} | "
+        if col_max[dict_key] > wrap:
+            table_string += f"{heading_name:<{wrap}} | "
+        else:
+            table_string += f"{heading_name:<{col_max[dict_key]}} | "
 
     # Puts a row of '-' after the heading row
-    table_string += f"\n {'-' * len(table_string)}"
+    table_string += f"\n{'-' * (len(table_string) - 1)}"
 
-    # For each site in the data, append the correct row data to the table string
+    # For each element in the data, append the correct column data to the row in the table string
     table_string += "\n"
-    for element in data:
-
-        # While that element had data left to be displayed
-        while any(value != '' for value in element.values()):
-            for heading_name, dict_key in column_info:
-                if len(element[dict_key]) > wrap:  # There is too much data to display on one line
-                    data_for_row = []
-                    data_split = element[dict_key].split(' ')
-                    # Add segments to data_for_row until it becomes longer than the max length allowed for a row
-                    for segments in data_split.copy():
-                        if len(' '.join(data_for_row)) > wrap:  # Got enough data for one row
-                            # Remove the last segment because it made the string too long
-                            data_for_row.pop(-1)
-                            # Replace the data with the remaining data
-                            element[dict_key] = ' '.join(data_split)
-                            break
-                        else:
-                            # Add data to the list for the row and remove it from the list
-                            data_for_row.append(segments)
-                            data_split.remove(segments)
-                    # Add data that will fit for that row
-                    table_string += f"{' '.join(data_for_row)}{' ' * spaces_needed(wrap, col_max[dict_key], ' '.join(data_for_row))} | "
-                else:
-                    table_string += f"{element[dict_key]}{' ' * spaces_needed(wrap, col_max[dict_key], element[dict_key])} | "
-                    element[dict_key] = ''
-            table_string += "\n"
+    for d in data:
+        table_string += add_row(d, column_info, wrap, col_max)
 
     return table_string
 
 
-def add_row(element, dict_key, wrap, col_max):
+def save(data: list[dict], file_name: str):
     """
-    WIP
-    :param element:
-    :param dict_key:
-    :param wrap:
-    :param col_max:
-    :return:
+    ---------------
+    Description
+    ---------------
+    Takes input data in the format that the get_current_data will give and saves it to a .csv file
+    so that it can be used in other parts of the AQUA System
+
+    ---------------
+    General Overview
+    ---------------
+    Copy the data
+    Remove the 'datetime' key
+    Create the file
+    Use csv dict writer to write headings and data
+
+    :param data: Data to save to csv
+    :param file_name: Name to give csv
+    :return: None
     """
-    data_for_row = []
-    data_split = element[dict_key].split(' ')
-    # Add segments to data_for_row until it becomes longer than the max length allowed for a row
-    for segments in data_split.copy():
-        if len(' '.join(data_for_row)) > wrap:  # Got enough data for one row
-            # Remove the last segment because it made the string too long
-            data_for_row.pop(-1)
-            # Replace the data with the remaining data
-            element[dict_key] = ' '.join(data_split)
-            break
+
+    data = data.copy()
+    for d in data:
+        del d['datetime']
+
+    keys = ['date', 'time', 'no', 'pm10', 'pm25']
+
+    with open("data/" + file_name + ".csv", 'w', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(data)
+
+
+def make_graph(data: list[dict], pollutant: str):
+    """
+    ---------------
+    Description
+    ---------------
+    Takes input data and returns a graph to display in the console
+
+    ---------------
+    General Overview
+    ---------------
+    Find min and max y
+    Divide the y range into suitable segments
+
+    For each y segment
+    Iterate over the data in date order and find the values that lie within the segment range y1 <= value < y2
+    Add a character there to indicate a data point
+
+    :param pollutant: Name of the pollutant to plot a graph for
+    :param data: Data from containing the data to plot
+    :return: A string to print a graph
+    """
+
+    values = []
+    for d in data:
+        values.append(d[pollutant])
+
+    # Get the values of the input pollutant and convert them to floats
+    values_for_min_max = values.copy()
+    utils.remove_no_value(values_for_min_max)
+    values_as_float = [float(value) for value in values_for_min_max]
+
+    # Find the min and max values and find the range
+    max_value_index = utils.maxvalue(values_as_float)
+    min_value_index = utils.minvalue(values_as_float)
+    max_value = math.ceil(values_as_float[max_value_index])
+    min_value = math.floor(values_as_float[min_value_index])
+    # Divide into 21 steps
+    step = (max_value - min_value)/21
+
+    # Replace 'No data' values with -1 since this shouldn't display on the graph
+    for value in values:
+        if value == 'No data':
+            value = -1
+
+    # Find the value with the longest length
+    longest = 0
+    values_for_min_max = [str(float(f'{current_value:.1f}')) for current_value in values_as_float]
+    for value in values_for_min_max:
+        if len(str(value)) > longest:
+            longest = len(str(value))
+
+    graph_string = ''
+    current_value = max_value
+    # For each line that will be in the graph
+    for i in range(21):
+        # Put a value label on every other line in the graph
+        if i % 2 == 0:
+            graph_string += f"{current_value:>{longest}.1f} +"
         else:
-            # Add data to the list for the row and remove it from the list
-            data_for_row.append(segments)
-            data_split.remove(segments)
-    # Add data that will fit for that row
-    return f"{' '.join(data_for_row)}{' ' * spaces_needed(wrap, col_max[dict_key], ' '.join(data_for_row))} | "
+            graph_string += " " * longest + " |"
+
+        # For each value in the data, if it is within the range to be displayed on this line, put a *
+        for value in values:
+            if (current_value - step) <= float(value) < current_value:
+                graph_string += "*"
+            else:
+                graph_string += " "
+
+        graph_string += "\n"
+        current_value -= step  # Change the bounds that wil be checked for the next line
+
+    # Put a line at the bottom of the graph
+    graph_string += ' ' * (longest + 1) + '+' + '-' * len(values)
+
+    return graph_string
+
+
+# -------------------------
+# Data Retrieving Functions
+# -------------------------
+
+
+def make_api_call(endpoint: str):
+    """
+    ---------------
+    Description
+    ---------------
+    Takes the last part of the url to make the API call
+
+    ---------------
+    General Overview
+    ---------------
+    Append the endpoint to form a url
+    Make http request with the url
+    Return the data
+
+    :param endpoint: Remaining part of the url
+    :return: Response from API
+    """
+    url = f"http://api.erg.ic.ac.uk/AirQuality/{endpoint}"
+    res = requests.get(url)
+    return res.json()
 
 
 def get_monitoring_sites(group: str) -> str:
     """
+    ---------------
+    Description
+    ---------------
     Gets the names, site code, lat, long, open date and close date for all of the sites in a group
+    and returns a table string to display
+    This information can be used to get realtime data from the get_current_data function
+
+    ---------------
+    General Overview
+    ---------------
+    Make an API call to retrieve the information about all the monitoring sites in the input group
+    Turn the data into a table to be displayed
+
     :param group: Name of the group to get the site info for
     :return: String to print containing the data in a table
     """
@@ -156,11 +305,22 @@ def get_monitoring_sites(group: str) -> str:
 
 def get_groups() -> str:
     """
+    ---------------
+    Description
+    ---------------
     Gets the names and description for all of the groups that contain sites
+    This information can be used to see what sites are in a group
+
+    ---------------
+    General Overview
+    ---------------
+    Make an API call to get the information on all the different groups
+    Turn the data into a table to be displayed
+
     :return: String to print containing the data in a table
     """
 
-    res = make_api_call("/Information/Groups/Json")
+    res = make_api_call("Information/Groups/Json")
     data = res['Groups']['Group']
     column_info = [("Group Name", "@GroupName"), ("Description", "@Description"), ("URL", "@WebsiteURL")]
     table = make_table(data, column_info, 80)
@@ -169,69 +329,110 @@ def get_groups() -> str:
 
 def get_current_data(start_date: datetime.date, end_date: datetime.date, site_code: str) -> list[dict]:
     """
+    ---------------
+    Description
+    ---------------
     Gets data from the specified site between the given dates
+
+    ---------------
+    General Overview
+    ---------------
+    Make 3 API calls - One for each of the three pollutants the AQUA System deals with
+    Rename the dictionary keys to ones used in the rest of the AQUA system
+    Set empty values to 'No data'
+    Merge the 3 dictionaries into one
+    Turn into list of dicts in the correct format
 
     :param start_date: Date to start getting data for
     :param end_date: Date to stop getting data for
     :param site_code: Site to get data from
-    :return: List of dictionaries containing the data
+    :return: List of dicts containing the data for the three pollutants
     """
 
     # Get data for the three pollutant types between the given dates for the given site
-    res_no = make_api_call(f"/Data/SiteSpecies/SiteCode={site_code}/SpeciesCode=NO/StartDate={start_date}/EndDate={end_date}/Json")['RawAQData']['Data']
-    # Rename @value key to @no and delete the @value key
+    res_no = make_api_call(f"Data/SiteSpecies/SiteCode={site_code}/SpeciesCode=NO/StartDate={start_date}/EndDate={end_date}/Json")['RawAQData']['Data']
+    # Rename @value key to 'no' and the @MeasurementDateGMT to 'datetime'
     for entry in res_no:
-        entry['@no'] = entry['@Value']
-        del entry['@Value']
-        if entry['@no'] == '':
-            entry['@no'] = 'No data'
+        entry['no'] = entry.pop('@Value')
+        entry['datetime'] = entry.pop('@MeasurementDateGMT')
+        if entry['no'] == '':
+            entry['no'] = 'No data'
+
     res_pm10 = make_api_call(f"/Data/SiteSpecies/SiteCode={site_code}/SpeciesCode=PM10/StartDate={start_date}/EndDate={end_date}/Json")['RawAQData']['Data']
     for entry in res_pm10:
-        entry['@pm10'] = entry['@Value']
-        del entry['@Value']
-        if entry['@pm10'] == '':
-            entry['@pm10'] = 'No data'
+        entry['pm10'] = entry.pop('@Value')
+        entry['datetime'] = entry.pop('@MeasurementDateGMT')
+        if entry['pm10'] == '':
+            entry['pm10'] = 'No data'
+
     res_pm25 = make_api_call(f"/Data/SiteSpecies/SiteCode={site_code}/SpeciesCode=PM25/StartDate={start_date}/EndDate={end_date}/Json")['RawAQData']['Data']
     for entry in res_pm25:
-        entry['@pm25'] = entry['@Value']
-        del entry['@Value']
-        if entry['@pm25'] == '':
-            entry['@pm25'] = 'No data'
+        entry['pm25'] = entry.pop('@Value')
+        entry['datetime'] = entry.pop('@MeasurementDateGMT')
+        if entry['pm25'] == '':
+            entry['pm25'] = 'No data'
 
-    # Merge all the dictionaries into one
+    # Merge all the dictionaries into one and reformat datetime
     data = []
     for i in range(len(res_no)):
-        data.append(res_no[i] | res_pm10[i] | res_pm25[i])
+        merged = res_no[i] | res_pm10[i] | res_pm25[i]
+        merged['datetime'] = datetime.datetime.fromisoformat(merged['datetime'])
+        merged['date'] = str(merged['datetime'].date())
+        merged['time'] = str((merged['datetime'] + datetime.timedelta(hours=1)).time()) if str(merged['datetime'].time()) != '23:00:00' else '24:00:00'
+        data.append(merged)
 
     return data
 
 
-def save(data: list[dict], file_name: str):
+def get_species_info():
     """
-    Takes input data in the format that the get_current_data will give and saves it to a .csv file
-    so that it can be used in other parts of the AQUA System
+    ---------------
+    Description
+    ---------------
+    Gets information about all the species
 
-    :param data: Data to save to csv
-    :param file_name: Name to give csv
-    :return: None
+    ---------------
+    General Overview
+    ---------------
+    Make API call to get the data
+    Make headings
+    Make and return table containing data
+
+    :return: Table string to print
     """
 
-    with open('data/' + file_name, "w") as f:
-        # Write headings
-        f.write("date,time,no,pm10,pm25\n")
-
-        for element in data:
-            line = ''
-            date_and_time = element['@MeasurementDateGMT'].split(' ')
-            line += date_and_time[0]  # Split the date into the date and time then write
-            time = date_and_time[1].split(':')
-            time[0] = str(int(time[0]) + 1)
-            line += ',' + ':'.join(time)
-            line += ',' + element['@no']
-            line += ',' + element['@pm10']
-            line += ',' + element['@pm25']
-            f.write(line + '\n')
+    data = make_api_call("Information/Species/Json")['AirQualitySpecies']['Species']
+    headings = [('Species Name', '@SpeciesName'), ('Species Code', '@SpeciesCode'), ('Description', '@Description'), ('Health Effect', '@HealthEffect')]
+    table = make_table(data, headings, 80)
+    return table
 
 
-# save(get_current_data(datetime.date(year=2021, month=1, day=1), datetime.date(year=2022, month=1, day=1), "KC1"), 'test_save.csv')
-# print(get_monitoring_sites("London"))
+def get_news(skip: int, limit: int):
+    """
+    ---------------
+    Description
+    ---------------
+    Gets news from the API
+
+    ---------------
+    General Overview
+    ---------------
+    Make API call
+    Create URL with @NewsId
+    Create headings for table
+    Make table
+
+    :param skip: How many news articles to skip from start
+    :param limit: Number of articles to return
+    :return: Table to print
+    """
+
+    data = make_api_call(f"Information/News/Skip={skip}/limit={limit}/Json")['News']['NewsItem']
+
+    for item in data:
+        item['@url'] = f"https://www.londonair.org.uk/london/asp/news.asp?NewsId={item['@NewsId']}"
+
+    headings = [('News Title', '@NewsTitle'), ('URL', '@url')]
+    table = make_table(data, headings, 100)
+
+    return table
