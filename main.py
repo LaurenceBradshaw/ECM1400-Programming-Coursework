@@ -11,10 +11,10 @@ import intelligence
 import sys
 import utils
 
+
 # -------------------------
 # My custom functions
 # -------------------------
-from utils import clear
 
 
 def get_pollutant(module: str) -> str:
@@ -41,7 +41,7 @@ def get_pollutant(module: str) -> str:
                    "• PM10 - Particulate Matter 10\n" \
                    "• PM25 - Particulate Matter 2.5"
     pollutant = get_valid_user_input(menu_options, valid_options_regex)
-    utils.clear()
+    clear()
     return pollutant.lower()
 
 
@@ -69,9 +69,9 @@ def get_file(files: list, module_str: str) -> str:
             chosen_file = files[int(file_index_chosen)]
             break
         except IndexError:
-            utils.clear()
+            clear()
 
-    utils.clear()
+    clear()
     return chosen_file
 
 
@@ -95,7 +95,7 @@ def get_date(module: str) -> datetime.datetime:
             date = datetime.datetime.fromisoformat(user_choice)
             break
         except ValueError:
-            utils.clear()
+            clear()
 
     return date
 
@@ -175,7 +175,7 @@ def display_data(output, pollutant, time_steps):
                    "• G - Graph\n" \
                    "• B - Return to reporting menu"
     display_type = get_valid_user_input(menu_options, valid_options_regex)
-    utils.clear()
+    clear()
 
     display = "----------AQUA System Reporting Module-----------\n"
 
@@ -238,6 +238,18 @@ def get_valid_user_input(menu_text: str, regex: str) -> str:
             return user_choice
 
 
+def clear():
+    """
+    ---------------
+    Description
+    ---------------
+    Clears the text in the console
+
+    :return: None
+    """
+    os.system('cls')
+
+
 # -------------------------
 # Template Functions
 # -------------------------
@@ -273,7 +285,7 @@ def main_menu():
     # while loop is used so the user can come back to the main menu and the program not close until they pick quit
     while True:
         # Clear the console of text
-        utils.clear()
+        clear()
         # Get the user input
         user_choice = get_valid_user_input(menu_options, valid_options_regex)
         # Open the menu requested by the user
@@ -310,7 +322,7 @@ def reporting_menu():
     """
 
     while True:
-        utils.clear()
+        clear()
         # Loading all data files
         # Finds all the files in the data directory
         file_names = os.listdir("data")
@@ -336,7 +348,7 @@ def reporting_menu():
                        "• F - Fill missing data rows\n" \
                        "• B - Return to main menu"
         user_choice = get_valid_user_input(menu_options, valid_options_regex)
-        utils.clear()
+        clear()
 
         # If the user has not chosen to return to the main menu get the file and pollutant that the user wishes to use
         if user_choice.lower() != 'b':
@@ -383,13 +395,13 @@ def reporting_menu():
             get_valid_user_input(menu_options, valid_options_regex)
 
         elif user_choice.lower() == 'f':  # Fill Missing Data
-            utils.clear()
+            clear()
             # Get the new value that should replace 'No data' entries
             menu_options = "----------AQUA System Reporting Module-----------\n" \
                            "Input new value:"
             valid_options_regex = "[0-9]+\\.[0-9]+"
             new_value = get_valid_user_input(menu_options, valid_options_regex)
-            utils.clear()
+            clear()
             output = reporting.fill_missing_data(data, new_value, chosen_file, pollutant)
             # Get the name of the file the user wishes to save the updated data to
             menu_options = "----------AQUA System Reporting Module-----------\n" \
@@ -419,7 +431,7 @@ def monitoring_menu():
     """
 
     while True:
-        utils.clear()
+        clear()
         # List options and get user input
         valid_options_regex = '[gsdpbnGSDBPN]'
         menu_options = "----------AQUA System Monitoring Module----------\n" \
@@ -431,7 +443,7 @@ def monitoring_menu():
                        "• D - Get data from a station\n" \
                        "• B - Return to main menu"
         user_choice = get_valid_user_input(menu_options, valid_options_regex)
-        utils.clear()
+        clear()
 
         if user_choice.lower() == 'g':  # List all the groups available
             valid_options_regex = ".*"
@@ -557,7 +569,7 @@ def intelligence_menu():
     :return: None
     """
     while True:
-        utils.clear()
+        clear()
         # Finds all the files in the data directory
         file_names = os.listdir("data")
         # Regex to find files that end with .png
@@ -575,7 +587,7 @@ def intelligence_menu():
                        "• SCC - Find connected components sorted\n" \
                        "• B - Return to main menu"
         user_choice = get_valid_user_input(menu_options, valid_options_regex)
-        utils.clear()
+        clear()
 
         # If the user has not chosen to return to the main menu get the map the user wishes to use
         if user_choice.lower() != 'b':
@@ -634,7 +646,7 @@ def about():
     :return: None
     """
     # Clear the console of text
-    utils.clear()
+    clear()
 
     # List the about information and get user input to return to main menu
     valid_options_regex = ".*"
