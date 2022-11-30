@@ -214,6 +214,9 @@ def maxvalue(values):
 
     # Check for non-numeric values
     check_numeric(values, "Cannot find maximum with non-numeric values present")
+    # Check for no values
+    if len(values) == 0:
+        raise ValueError("No values present to find maximum for")
 
     # Holds the current maximum value found in the input
     current_max = values[0]
@@ -250,6 +253,9 @@ def minvalue(values):
 
     # Check for non-numeric values
     check_numeric(values, "Cannot find minimum with non-numeric values present")
+    # Check for no values
+    if len(values) == 0:
+        raise ValueError("No values present to find minimum for")
 
     # Holds the current minimum value found in the input
     # Set to the first element of values to start
