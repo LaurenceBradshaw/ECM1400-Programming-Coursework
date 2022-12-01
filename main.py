@@ -1,10 +1,13 @@
 # This is a template. 
 # You should modify the functions below to match
 # the signatures determined by the project specification
+import csv
 import datetime
 import os
 import re
 import time
+from typing import Union
+
 import reporting
 import monitoring
 import intelligence
@@ -15,6 +18,45 @@ import utils
 # -------------------------
 # My custom functions
 # -------------------------
+
+
+def read_file(file_name: str) -> Union[list[dict], None]:
+    """
+    ---------------
+    Description
+    ---------------
+    Reads the input file name into a list of dict
+    If file name is not found, return None
+
+    ---------------
+    General Overview
+    ---------------
+    Open the file
+    Use csv builtin library to read data into list of dict
+    If no file found return None
+    Merge date and time values into a datetime object
+
+    :param file_name:
+    :return:
+    """
+    try:
+        # Read the file
+        with open("data/{}".format(file_name), 'r') as f:
+            data = [{key: value for key, value in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
+    # File was not found
+    except FileNotFoundError:
+        return None
+
+    # Merge date and time fields into datetime objects
+    for d in data:
+        date = datetime.date.fromisoformat(d['date'])
+
+        time_as_list = d['time'].split(':')
+        time = datetime.time(int(time_as_list[0]) - 1)
+
+        d['datetime'] = datetime.datetime.combine(date, time)
+
+    return data
 
 
 def get_pollutant(module: str) -> str:
@@ -333,7 +375,7 @@ def reporting_menu():
         # Reads each csv into a dictionary of pandas dataframes
         data = {}
         for file in csv_files:
-            data[file] = utils.read_file(file)
+            data[file] = read_file(file)
 
         # List options and get user input
         valid_options_regex = '[dD][mM]|[dhDHmM][aA]|[cfbCFB]|[pP][hH]'
