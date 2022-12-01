@@ -1,15 +1,39 @@
 # This is a template.
 # You should modify the functions below to match
 # the signatures determined by the project specification
-from typing import Callable
+from typing import Callable, Union
 import utils
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as mat_plot
 
 
 # -------------------------
 # My custom functions
 # -------------------------
+
+
+def read_image(file_name: str) -> Union[np.ndarray, None]:
+    """
+    ---------------
+    Description
+    ---------------
+    Reads the input file name as an image
+    If file name is not found, return None
+
+    ---------------
+    General Overview
+    ---------------
+    Try to read the file
+    If error return None
+
+    :param file_name:
+    :return:
+    """
+    try:
+        img = mat_plot.imread(f"data/{file_name}")
+        return img
+    except FileNotFoundError:
+        return None
 
 
 def red_pixel_condition(map_file: np.array, upper_threshold: int, lower_threshold: int, x: int, y: int) -> bool:
@@ -110,30 +134,26 @@ def filter_pixels(map_file: np.array, upper_threshold: int, lower_threshold: int
     return empty_map_file
 
 
-def push_queue(queue: np.array, value) -> np.array:
+def push_queue(queue: np.array, value, tail: int) -> np.array:
     """
     ---------------
     Description
     ---------------
     Appends an element to the numpy ndarry queue
 
+    :param tail: Tail of the queue like object
     :param queue: The queue to append to
     :param value: The value to append
     :return: The new queue with the appended value
     """
 
-    current_queue_size = queue.shape[0]
-    new_queue = np.zeros((current_queue_size + 1, 2), dtype=int)
+    queue[tail] = value
+    tail += 1
 
-    for x in range(current_queue_size):
-        new_queue[x] = queue[x]
-
-    new_queue[current_queue_size] = value
-
-    return new_queue
+    return tail
 
 
-def pop_queue(queue: np.array) -> tuple:
+def pop_queue(queue: np.array, head: int) -> tuple:
     """
     ---------------
     Description
@@ -141,22 +161,15 @@ def pop_queue(queue: np.array) -> tuple:
     Pops an element from the front of the numpy ndarry queue
     If given an empty queue pop will return None
 
+    :param head: Value for head pointer of queue
     :param queue: The queue to pop the value from
     :return: A tuple containing the new queue and the popped value
     """
 
-    current_queue_size = queue.shape[0]
-    if current_queue_size != 0:
-        new_queue = np.zeros((current_queue_size - 1, 2), dtype=int)
+    pop = queue[head]
+    head += 1
 
-        for x in range(current_queue_size - 1):
-            new_queue[x] = queue[x + 1]
-
-        pop = queue[0]
-    else:
-        new_queue = np.zeros((0, 2), dtype=int)
-        pop = None
-    return new_queue, pop
+    return pop, head
 
 
 def find_neighbours(s: int, t: int, img_width: int, img_height: int) -> list:
@@ -234,12 +247,12 @@ def find_red_pixels(*args, **kwargs):
     lower_threshold = kwargs['lower_threshold']
 
     # Load the image
-    map_file = utils.read_image(map_filename) * 255
+    map_file = read_image(map_filename) * 255
     # Get all red pixels from the image
     new_map = filter_pixels(map_file, upper_threshold, lower_threshold, red_pixel_condition)
 
     # Save the binary image array as a jpg file
-    plt.imsave("map-red-pixels.jpg", np.uint8(new_map))
+    mat_plot.imsave("map-red-pixels.jpg", np.uint8(new_map))
 
     return new_map
 
@@ -263,12 +276,12 @@ def find_cyan_pixels(*args, **kwargs):
     lower_threshold = kwargs['lower_threshold']
 
     # Load the image
-    map_file = utils.read_image(map_filename) * 255
+    map_file = read_image(map_filename) * 255
     # Get all cyan pixels from the image
     new_map = filter_pixels(map_file, upper_threshold, lower_threshold, cyan_pixel_condition)
 
     # Save the binary image array as a jpg file
-    plt.imsave("map-cyan-pixels.jpg", np.uint8(new_map))
+    mat_plot.imsave("map-cyan-pixels.jpg", np.uint8(new_map))
 
     return new_map
 
@@ -302,7 +315,10 @@ def detect_connected_components(*args, **kwargs):
     # When a pixel is visited it will be marked in MARK with its component number (modification to original algorithm)
     mark = np.zeros((img_width, img_height), dtype=int)
     # Create an empty queue-like ndarray Q
-    queue = np.zeros((0, 2))
+    max_queue_length = img_height * img_width
+    queue = np.zeros((max_queue_length, 2), dtype=int)
+    queue_head = 0
+    queue_tail = 0
     # for each pixel p(x, y) in IMG do
     for x in range(img_width):
         for y in range(img_height):
@@ -315,11 +331,11 @@ def detect_connected_components(*args, **kwargs):
                 # set MARK(x, y) as visited;
                 mark[x, y] = component_number
                 # add p(x, y) into Q;
-                queue = push_queue(queue, [x, y])
+                queue_tail = push_queue(queue, [x, y], queue_tail)
                 # while Q is not empty do
-                while queue.shape[0] != 0:
+                while queue_tail != queue_head:
                     # Remove the first item q(m, n) from Q;
-                    queue, current_pixel = pop_queue(queue)
+                    current_pixel, queue_head = pop_queue(queue, queue_head)
                     # for each 8-neighbour n(s, t) of q(m, n) do
                     neighbours = find_neighbours(current_pixel[0], current_pixel[1], img_width, img_height)
                     for neighbour in neighbours:
@@ -332,7 +348,7 @@ def detect_connected_components(*args, **kwargs):
                             # set MARK(s, t) as visited;
                             mark[s, t] = component_number
                             # add n(s, t) into Q;
-                            queue = push_queue(queue, [s, t])
+                            queue_tail = push_queue(queue, [s, t], queue_tail)
 
                 # All pixels in the current component have been found
                 # Add a string containing this information to the output_strings list
@@ -407,4 +423,5 @@ def detect_connected_components_sorted(*args, **kwargs):
     # Very hacked together use of the filter_pixels function :)
     top_two_map = filter_pixels(mark, sorted_components[0][0], sorted_components[1][0], top_two_condition)
     # Save the binary image of the top two components as a jpg file
-    plt.imsave("cc-top-2.jpg", np.uint8(top_two_map))
+    mat_plot.imsave("cc-top-2.jpg", np.uint8(top_two_map))
+
