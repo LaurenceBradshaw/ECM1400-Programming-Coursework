@@ -2,12 +2,44 @@
 # You should modify the functions below to match
 # the signatures determined by the project specification
 from datetime import datetime, timedelta
+from typing import Union
+import numpy as np
 import utils
 
 
 # -------------------------
 # My custom functions
 # -------------------------
+
+
+def sort(values: Union[list, np.array]) -> list:
+    """
+    ---------------
+    Description
+    ---------------
+    Returns a sorted (smallest to largest) list
+
+    ---------------
+    General Overview
+    ---------------
+    For the length of values,
+    Find the smallest and append it to a list
+    Remove it from the original list list
+    Repeat until end of list
+
+    :param values: list/array to sort
+    :return: sorted list
+    """
+
+    output = []
+    for i in range(len(values)):
+        # Find the smallest value
+        index = utils.minvalue(values)
+        # Append and remove it from the list
+        output.append(values[index])
+        values.pop(index)
+
+    return output
 
 
 def get_time_range(data: list[dict], start_date: datetime, end_date: datetime, pollutant: str):
@@ -163,7 +195,7 @@ def daily_median(data, monitoring_station, pollutant):
         day_values = get_time_range(station_data, start_date, start_date + time_delta, pollutant)
         utils.remove_no_value(day_values)  # This may change the length of the list so later indexes could be any length
         day_values = [float(d) for d in day_values]
-        sorted_values = utils.sort(day_values)
+        sorted_values = sort(day_values)
         # If there is no data for all values in the day, return 'No data' as median
         if len(sorted_values) == 0:
             output.append('No data')
@@ -409,4 +441,3 @@ def fill_missing_data(data, new_value, monitoring_station, pollutant):
     data[monitoring_station] = station_data
 
     return data
-
