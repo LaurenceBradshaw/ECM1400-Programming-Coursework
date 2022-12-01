@@ -2,10 +2,7 @@
 # You should modify the functions below to match
 # the signatures determined by the project specification
 from typing import Union
-import matplotlib.pyplot as plt
 import numpy as np
-import datetime
-import csv
 
 
 # -------------------------
@@ -37,99 +34,6 @@ def check_numeric(values: Union[list, np.array], exception_message: str):
     for element in values:
         if type(element) != int and type(element) != float:
             raise ValueError(exception_message)
-
-
-def read_file(file_name: str) -> Union[list[dict], None]:
-    """
-    ---------------
-    Description
-    ---------------
-    Reads the input file name into a list of dict
-    If file name is not found, return None
-
-    ---------------
-    General Overview
-    ---------------
-    Open the file
-    Use csv builtin library to read data into list of dict
-    If no file found return None
-    Merge date and time values into a datetime object
-
-    :param file_name:
-    :return:
-    """
-    try:
-        # Read the file
-        with open("data/{}".format(file_name), 'r') as f:
-            data = [{key: value for key, value in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
-    # File was not found
-    except FileNotFoundError:
-        return None
-
-    # Merge date and time fields into datetime objects
-    for d in data:
-        date = datetime.date.fromisoformat(d['date'])
-
-        time_as_list = d['time'].split(':')
-        time = datetime.time(int(time_as_list[0]) - 1)
-
-        d['datetime'] = datetime.datetime.combine(date, time)
-
-    return data
-
-
-def read_image(file_name: str) -> Union[np.ndarray, None]:
-    """
-    ---------------
-    Description
-    ---------------
-    Reads the input file name as an image
-    If file name is not found, return None
-
-    ---------------
-    General Overview
-    ---------------
-    Try to read the file
-    If error return None
-
-    :param file_name:
-    :return:
-    """
-    try:
-        img = plt.imread(f"data/{file_name}")
-        return img
-    except FileNotFoundError:
-        return None
-
-
-def sort(values: Union[list, np.array]) -> list:
-    """
-    ---------------
-    Description
-    ---------------
-    Returns a sorted (smallest to largest) list
-
-    ---------------
-    General Overview
-    ---------------
-    For the length of values,
-    Find the smallest and append it to a list
-    Remove it from the original list list
-    Repeat until end of list
-
-    :param values: list/array to sort
-    :return: sorted list
-    """
-
-    output = []
-    for i in range(len(values)):
-        # Find the smallest value
-        index = minvalue(values)
-        # Append and remove it from the list
-        output.append(values[index])
-        values.pop(index)
-
-    return output
 
 
 def remove_no_value(data: list):
