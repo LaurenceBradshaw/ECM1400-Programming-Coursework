@@ -1,7 +1,5 @@
-# Requires copy of the /data directory to be put in /test/data so the testing functions have access to the data
 import pytest
 import utils
-import numpy as np
 
 
 class TestCustom:
