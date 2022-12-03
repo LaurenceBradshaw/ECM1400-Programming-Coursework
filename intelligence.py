@@ -5,6 +5,7 @@ from typing import Callable, Union
 import utils
 import numpy as np
 from matplotlib import pyplot as mat_plot
+import os
 
 
 # -------------------------
@@ -30,7 +31,8 @@ def read_image(file_name: str) -> Union[np.ndarray, None]:
     :return:
     """
     try:
-        img = mat_plot.imread(f"data/{file_name}")
+        cwd = os.getcwd()
+        img = mat_plot.imread(f"{cwd}/data/{file_name}")
         return img
     except FileNotFoundError:
         return None
