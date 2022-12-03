@@ -7,13 +7,115 @@ import os
 import re
 import time
 from typing import Union
-
 import reporting
 import monitoring
 import intelligence
 import sys
-import utils
 
+
+class Menu:
+    """
+    This class is used to store the menu text and regex for menu's that are not dynamically created
+    The aim is to make the rest of the code in main.py look less cluttered
+    """
+
+    class Pollutant:
+        options = "Select a pollutant:\n" \
+                    "• NO - Nitric Oxide\n" \
+                    "• PM10 - Particulate Matter 10\n" \
+                    "• PM25 - Particulate Matter 2.5"
+        regex = '[nN][oO]|[pP][mM](10|25)'
+
+    class Date:
+        options = "Enter a date in the form YYYY-MM-DD:"
+        regex = '[0-9]{4}-[0-9]{2}-[0-9]{2}'
+
+    class Display:
+        options = "Select a way to display data:\n" \
+                       "• T - Table\n" \
+                       "• G - Graph\n" \
+                       "• B - Return to reporting menu"
+        regex = "[tgbTGB]"
+
+    class DisplaySave:
+        options = "Select a way to display data:\n" \
+                       "• T - Table\n" \
+                       "• G - Graph\n" \
+                       "• S - Save\n" \
+                       "• B - Return to monitoring menu"
+        regex = "[tgbsTGBS]"
+
+    class Main:
+        options = "--------------AQUA System Main Menu--------------\n" \
+                       "• R - Access the Pollution Reporting module\n" \
+                       "• I - Access the Mobility Intelligence module\n" \
+                       "• M - Access the Real-time Monitoring module\n" \
+                       "• A - Print the About text\n" \
+                       "• Q - Quit the application"
+        regex = '[rimaqRIMAQ]'
+
+    class File:
+        options = "Enter file name to save new data as:"
+        regex = "^[\\w\\-. ]+$"
+
+    class NewValue:
+        options = "Input new value:"
+        regex = "[0-9]+\\.[0-9]+"
+
+    class Reporting:
+        options = "----------AQUA System Reporting Module-----------\n" \
+                       "Select an operation:\n" \
+                       "• DA - Calculate the daily average\n" \
+                       "• DM - Calculate the daily median\n" \
+                       "• HA - Calculate the hourly average\n" \
+                       "• MA - Calculate the monthly average\n" \
+                       "• PH - Peak value at a specified date\n" \
+                       "• C - Count the number of rows with missing data\n" \
+                       "• F - Fill missing data rows\n" \
+                       "• B - Return to main menu"
+        regex = '[dD][mM]|[dhDHmM][aA]|[cfbCFB]|[pP][hH]'
+
+    class Monitoring:
+        options = "----------AQUA System Monitoring Module----------\n" \
+                       "Select an operation:\n" \
+                       "• G - List groups\n" \
+                       "• S - List stations in a group\n" \
+                       "• P - Get information about the different pollutants\n" \
+                       "• N - Get news information\n" \
+                       "• D - Get data from a station\n" \
+                       "• B - Return to main menu"
+        regex = '[gsdpbnGSDBPN]'
+
+    class Intelligence:
+        options = "---------AQUA System Intelligence Module---------\n" \
+                       "Select an operation:\n" \
+                       "• FR - Filter red pixels\n" \
+                       "• FC - Filter cyan pixels\n" \
+                       "• CC - Find connected components\n" \
+                       "• SCC - Find connected components sorted\n" \
+                       "• B - Return to main menu"
+        regex = '[fF][rRcC]|[sS]?[cC]{2}|[bB]'
+
+    class Filter:
+        options = "Select types of pixel to find connected components for:\n" \
+                       "• FR - Filter red pixels\n" \
+                       "• FC - Filter cyan pixels"
+        regex = '[fF][rRcC]'
+
+    class About:
+        options = "-------------------About AQUA--------------------\n" \
+                       "Module Code: ECM1400\n" \
+                       "Candidate Number: 239766\n" \
+                       "• Anykey - Return to main menu"
+        regex = ".*"
+
+    class Group:
+        options = "Enter group to get stations for:"
+        regex = ".*"
+
+    class Station:
+        options = "Enter station code to get data for:"
+        regex = ".*"
 
 # -------------------------
 # My custom functions
@@ -41,7 +143,8 @@ def read_file(file_name: str) -> Union[list[dict], None]:
     """
     try:
         # Read the file
-        with open("data/{}".format(file_name), 'r') as f:
+        cwd = os.getcwd()
+        with open("{}/data/{}".format(cwd, file_name), 'r') as f:
             data = [{key: value for key, value in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
     # File was not found
     except FileNotFoundError:
@@ -59,7 +162,7 @@ def read_file(file_name: str) -> Union[list[dict], None]:
     return data
 
 
-def get_pollutant(module: str) -> str:
+def get_pollutant() -> str:
     """
     ---------------
     Description
@@ -76,18 +179,11 @@ def get_pollutant(module: str) -> str:
     :return: selected pollutant
     """
 
-    valid_options_regex = '[nN][oO]|[pP][mM](10|25)'
-    menu_options = f"----------AQUA System {module} Module-----------\n" \
-                   "Select a pollutant:\n" \
-                   "• NO - Nitric Oxide\n" \
-                   "• PM10 - Particulate Matter 10\n" \
-                   "• PM25 - Particulate Matter 2.5"
-    pollutant = get_valid_user_input(menu_options, valid_options_regex)
-    clear()
+    pollutant = get_valid_user_input(Menu.Pollutant.options, Menu.Pollutant.regex)
     return pollutant.lower()
 
 
-def get_file(files: list, module_str: str) -> str:
+def get_file(files: list) -> str:
     """
     ---------------
     Description
@@ -95,15 +191,13 @@ def get_file(files: list, module_str: str) -> str:
     Lists files and gets the users input to select one
 
     :param files: List of files to display
-    :param module_str: Text to display in the menu heading
     :return: File name of file selected
     """
 
     valid_options_regex = '[0-9]*'
     chosen_file = ''
     while True:
-        menu_options = f"---------AQUA System {module_str} Module----------\n" \
-                       "Select a file to use:"
+        menu_options = "Select a file to use:"
         for i, file in enumerate(files):
             menu_options += f'\n[{i}] - {file}'
         file_index_chosen = get_valid_user_input(menu_options, valid_options_regex)
@@ -113,11 +207,10 @@ def get_file(files: list, module_str: str) -> str:
         except IndexError:
             clear()
 
-    clear()
     return chosen_file
 
 
-def get_date(module: str) -> datetime.datetime:
+def get_date() -> datetime.datetime:
     """
     ---------------
     Description
@@ -128,11 +221,7 @@ def get_date(module: str) -> datetime.datetime:
     """
 
     while True:
-        valid_date_regex = '[0-9]{4}-[0-9]{2}-[0-9]{2}'
-        menu_options = f"----------AQUA System {module} Module-----------\n" \
-                       "Enter a date in the form YYYY-MM-DD:"
-
-        user_choice = get_valid_user_input(menu_options, valid_date_regex)
+        user_choice = get_valid_user_input(Menu.Date.options, Menu.Date.regex)
         try:
             date = datetime.datetime.fromisoformat(user_choice)
             break
@@ -210,16 +299,9 @@ def display_data(output, pollutant, time_steps):
     """
 
     # List the options and get user input
-    valid_options_regex = "[tgbTGB]"
-    menu_options = "----------AQUA System Reporting Module-----------\n" \
-                   "Select a way to display data:\n" \
-                   "• T - Table\n" \
-                   "• G - Graph\n" \
-                   "• B - Return to reporting menu"
-    display_type = get_valid_user_input(menu_options, valid_options_regex)
-    clear()
+    display_type = get_valid_user_input(Menu.Display.options, Menu.Display.regex)
 
-    display = "----------AQUA System Reporting Module-----------\n"
+    display = ""
 
     # Convert data into list of dicts
     output_list_of_dicts = []
@@ -266,6 +348,8 @@ def get_valid_user_input(menu_text: str, regex: str) -> str:
     """
 
     while True:
+        # Clears the console of previous test
+        clear()
         # Print the options to the screen
         print(menu_text)
         # Get the users input
@@ -314,22 +398,10 @@ def main_menu():
     • Q - Quit the application
     :return: None
     """
-
-    # Define the regex that will be used to check if the users input to the menu is a valid choice
-    valid_options_regex = '[rimaqRIMAQ]'
-    # Define the menu string to print
-    menu_options = "--------------AQUA System Main Menu--------------\n" \
-                   "• R - Access the Pollution Reporting module\n" \
-                   "• I - Access the Mobility Intelligence module\n" \
-                   "• M - Access the Real-time Monitoring module\n" \
-                   "• A - Print the About text\n" \
-                   "• Q - Quit the application"
     # while loop is used so the user can come back to the main menu and the program not close until they pick quit
     while True:
-        # Clear the console of text
-        clear()
-        # Get the user input
-        user_choice = get_valid_user_input(menu_options, valid_options_regex)
+        # Get the user input for the main menu
+        user_choice = get_valid_user_input(Menu.Main.options, Menu.Main.regex)
         # Open the menu requested by the user
         if user_choice.lower() == 'r':
             reporting_menu()
@@ -364,7 +436,6 @@ def reporting_menu():
     """
 
     while True:
-        clear()
         # Loading all data files
         # Finds all the files in the data directory
         file_names = os.listdir("data")
@@ -378,24 +449,12 @@ def reporting_menu():
             data[file] = read_file(file)
 
         # List options and get user input
-        valid_options_regex = '[dD][mM]|[dhDHmM][aA]|[cfbCFB]|[pP][hH]'
-        menu_options = "----------AQUA System Reporting Module-----------\n" \
-                       "Select an operation:\n" \
-                       "• DA - Calculate the daily average\n" \
-                       "• DM - Calculate the daily median\n" \
-                       "• HA - Calculate the hourly average\n" \
-                       "• MA - Calculate the monthly average\n" \
-                       "• PH - Peak value at a specified date\n" \
-                       "• C - Count the number of rows with missing data\n" \
-                       "• F - Fill missing data rows\n" \
-                       "• B - Return to main menu"
-        user_choice = get_valid_user_input(menu_options, valid_options_regex)
-        clear()
+        user_choice = get_valid_user_input(Menu.Reporting.options, Menu.Reporting.regex)
 
         # If the user has not chosen to return to the main menu get the file and pollutant that the user wishes to use
         if user_choice.lower() != 'b':
-            chosen_file = get_file(csv_files, "Reporting")
-            pollutant = get_pollutant('Reporting')
+            chosen_file = get_file(csv_files)
+            pollutant = get_pollutant()
         else:
             break
 
@@ -418,11 +477,10 @@ def reporting_menu():
             display_data(output, pollutant, get_monthly_dates(start_date))
 
         elif user_choice.lower() == 'ph':  # Peak Hour
-            date = get_date('Reporting')  # Get the date the user wants to find peak hour for
+            date = get_date()  # Get the date the user wants to find peak hour for
             output = reporting.peak_hour_date(data, date, chosen_file, pollutant)
             # Display data
-            menu_options = f"----------AQUA System Reporting Module-----------\n" \
-                           f"Peak hour: {output[0]}, Peak Value: {output[1]}\n" \
+            menu_options = f"Peak hour: {output[0]}, Peak Value: {output[1]}\n" \
                            f"• Anykey - Return to reporting menu"
             valid_options_regex = ".*"
             get_valid_user_input(menu_options, valid_options_regex)
@@ -430,26 +488,17 @@ def reporting_menu():
         elif user_choice.lower() == 'c':  # Count Missing Data
             output = reporting.count_missing_data(data, chosen_file, pollutant)
             # Display data
-            menu_options = f"----------AQUA System Reporting Module-----------\n" \
-                           f"Number of 'No data' entries: {output}\n" \
+            menu_options = f"Number of 'No data' entries: {output}\n" \
                            f"• Anykey - Return to reporting menu"
             valid_options_regex = ".*"
             get_valid_user_input(menu_options, valid_options_regex)
 
         elif user_choice.lower() == 'f':  # Fill Missing Data
-            clear()
             # Get the new value that should replace 'No data' entries
-            menu_options = "----------AQUA System Reporting Module-----------\n" \
-                           "Input new value:"
-            valid_options_regex = "[0-9]+\\.[0-9]+"
-            new_value = get_valid_user_input(menu_options, valid_options_regex)
-            clear()
+            new_value = get_valid_user_input(Menu.NewValue.options, Menu.NewValue.regex)
             output = reporting.fill_missing_data(data, new_value, chosen_file, pollutant)
             # Get the name of the file the user wishes to save the updated data to
-            menu_options = "----------AQUA System Reporting Module-----------\n" \
-                           "Enter file name to save new data as:"
-            valid_options_regex = "^[\\w\\-. ]+$"
-            file_name = get_valid_user_input(menu_options, valid_options_regex)
+            file_name = get_valid_user_input(Menu.File.options, Menu.File.regex)
             # Borrow the save function from the monitoring module to save the new data
             monitoring.save(output[chosen_file], file_name)
 
@@ -466,49 +515,34 @@ def monitoring_menu():
     ----------------------
     • G - List groups
     • S - List stations in a group
+    • P - Get information about the different pollutants
+    • N - Get news information
     • D - Get data from a station
-    • B - Return to main menu
+    • B - Return to main menu"
 
     :return: None
     """
 
     while True:
-        clear()
         # List options and get user input
-        valid_options_regex = '[gsdpbnGSDBPN]'
-        menu_options = "----------AQUA System Monitoring Module----------\n" \
-                       "Select an operation:\n" \
-                       "• G - List groups\n" \
-                       "• S - List stations in a group\n" \
-                       "• P - Get information about the different pollutants\n" \
-                       "• N - Get news information\n" \
-                       "• D - Get data from a station\n" \
-                       "• B - Return to main menu"
-        user_choice = get_valid_user_input(menu_options, valid_options_regex)
-        clear()
+        user_choice = get_valid_user_input(Menu.Monitoring.options, Menu.Monitoring.regex)
 
         if user_choice.lower() == 'g':  # List all the groups available
             valid_options_regex = ".*"
-            table = "----------AQUA System Monitoring Module----------\n"
-            table += monitoring.get_groups()
+            table = monitoring.get_groups()
             table += "• Anykey - Return to main menu"
             get_valid_user_input(table, valid_options_regex)
 
         elif user_choice.lower() == 's':  # List all the stations within a group
-            valid_options_regex = ".*"
-            menu_options = "----------AQUA System Monitoring Module----------\n" \
-                           "Enter group to get stations for:"
-            group = get_valid_user_input(menu_options, valid_options_regex)
-            table = "----------AQUA System Monitoring Module----------\n"
-            table += monitoring.get_monitoring_sites(group)
+            group = get_valid_user_input(Menu.Group.options, Menu.Group.regex)
+            table = monitoring.get_monitoring_sites(group)
             table += "• Anykey - Return to main menu"
             get_valid_user_input(table, valid_options_regex)
 
         elif user_choice.lower() == 'n':  # List news and options for displaying more
             skip = 1
             while True:
-                table = "----------AQUA System Monitoring Module----------\n"
-                table += monitoring.get_news(skip, 20)
+                table = monitoring.get_news(skip, 20)
                 table += "• N - Next news items\n" \
                          "• P - Previous news items\n" \
                          "• B - Back to monitoring menu"
@@ -525,67 +559,52 @@ def monitoring_menu():
                     break
 
         elif user_choice.lower() == 'd':  # Get data from a station
-            valid_options_regex = ".*"
-            menu_options = "----------AQUA System Monitoring Module----------\n" \
-                           "Enter station code to get data for:"
-            station_code = get_valid_user_input(menu_options, valid_options_regex)
+            station_code = get_valid_user_input(Menu.Station.options, Menu.Station.regex)
             # Get start and end dates for getting the data
-            start = get_date('Monitoring')
-            end = get_date('Monitoring')
+            start = get_date()
+            end = get_date()
             # Make sure the start date is not after the end date
             while start > end:
                 print('Start date was before end date...\n Reenter dates')
                 time.sleep(2)
-                start = get_date('Monitoring')
-                end = get_date('Monitoring')
+                start = get_date()
+                end = get_date()
 
             # Get data
             output_data = monitoring.get_current_data(start.date(), end.date(), station_code.upper())
 
             # Give options for how the user wishes to see the data
-            valid_options_regex = "[tgbsTGBS]"
-            menu_options = "----------AQUA System Monitoring Module----------\n" \
-                           "Select a way to display data:\n" \
-                           "• T - Table\n" \
-                           "• G - Graph\n" \
-                           "• S - Save\n" \
-                           "• B - Return to monitoring menu"
-            display_type = get_valid_user_input(menu_options, valid_options_regex)
+            display_type = get_valid_user_input(Menu.DisplaySave.options, Menu.DisplaySave.regex)
 
             if display_type.lower() == 't':  # Display table
-                table = "----------AQUA System Monitoring Module----------\n"
                 # Convert datetime objects into strings
                 for row in output_data:
                     row['datetime'] = str(row['datetime'])
                 # Make headings
                 headings = [('Date and Time', 'datetime'), ('NO', 'no'), ('PM10', 'pm10'), ('PM25', 'pm25')]
                 # Make and display table
-                table += monitoring.make_table(output_data, headings)
+                table = monitoring.make_table(output_data, headings)
                 table += "• Anykey - Return to main menu"
                 valid_options_regex = ".*"
                 get_valid_user_input(table, valid_options_regex)
 
             elif display_type.lower() == 'g':  # Display graph
-                pollutant = get_pollutant('Monitoring')  # Get the pollutant to show graph for
+                pollutant = get_pollutant()  # Get the pollutant to show graph for
                 # Make and display graph
-                graph = "----------AQUA System Monitoring Module----------\n"
-                graph += monitoring.make_graph(output_data, pollutant)
+                graph = monitoring.make_graph(output_data, pollutant)
                 graph += "\n• Anykey - Return to main menu"
                 valid_options_regex = ".*"
                 get_valid_user_input(graph, valid_options_regex)
 
             elif display_type == 's':  # Save data
                 # Get name of file to save data under
-                options = "----------AQUA System Monitoring Module----------\nEnter file name:"
-                valid_options_regex = "^[\\w\\-. ]+$"
-                file_name = get_valid_user_input(options, valid_options_regex)
+                file_name = get_valid_user_input(Menu.File.options, Menu.File.regex)
                 monitoring.save(output_data, file_name)  # Save data
 
         elif user_choice.lower() == 'p':  # Get info on different pollutants
             valid_options_regex = ".*"
             # Display in table form
-            table = "----------AQUA System Monitoring Module----------\n"
-            table += monitoring.get_species_info()
+            table = monitoring.get_species_info()
             table += "• Anykey - Return to main menu"
             get_valid_user_input(table, valid_options_regex)
 
@@ -611,7 +630,6 @@ def intelligence_menu():
     :return: None
     """
     while True:
-        clear()
         # Finds all the files in the data directory
         file_names = os.listdir("data")
         # Regex to find files that end with .png
@@ -620,20 +638,11 @@ def intelligence_menu():
         png_file_names = list(filter(csv_regex.match, file_names))
 
         # List options and get user input
-        valid_options_regex = '[fF][rRcC]|[sS]?[cC]{2}|[bB]'
-        menu_options = "---------AQUA System Intelligence Module---------\n" \
-                       "Select an operation:\n" \
-                       "• FR - Filter red pixels\n" \
-                       "• FC - Filter cyan pixels\n" \
-                       "• CC - Find connected components\n" \
-                       "• SCC - Find connected components sorted\n" \
-                       "• B - Return to main menu"
-        user_choice = get_valid_user_input(menu_options, valid_options_regex)
-        clear()
+        user_choice = get_valid_user_input(Menu.Intelligence.options, Menu.Intelligence.regex)
 
         # If the user has not chosen to return to the main menu get the map the user wishes to use
         if user_choice.lower() != 'b':
-            file_name = get_file(png_file_names, "Intelligence")
+            file_name = get_file(png_file_names)
         else:
             break
 
@@ -645,12 +654,7 @@ def intelligence_menu():
 
         elif user_choice.lower() == 'cc':  # Find connected components
             # Find the type of pixel the user wishes to find connected components for
-            valid_options_regex = '[fF][rRcC]'
-            menu_options = "---------AQUA System Intelligence Module---------\n" \
-                           "Select types of pixel to find connected components for:\n" \
-                           "• FR - Filter red pixels\n" \
-                           "• FC - Filter cyan pixels"
-            filter_choice = get_valid_user_input(menu_options, valid_options_regex)
+            filter_choice = get_valid_user_input(Menu.Filter.options, Menu.Filter.regex)
             if filter_choice.lower() == 'fr':
                 filtered = intelligence.find_red_pixels(file_name, upper_threshold=100, lower_threshold=50)
 
@@ -661,12 +665,7 @@ def intelligence_menu():
 
         elif user_choice.lower() == 'scc':  # Find connected components sorted
             # Find the type of pixel the user wishes to find connected components for
-            valid_options_regex = '[fF][rRcC]'
-            menu_options = "---------AQUA System Intelligence Module---------\n" \
-                           "Select types of pixel to find connected components for:\n" \
-                           "• FR - Filter red pixels\n" \
-                           "• FC - Filter cyan pixels"
-            filter_choice = get_valid_user_input(menu_options, valid_options_regex)
+            filter_choice = get_valid_user_input(Menu.Filter.options, Menu.Filter.regex)
 
             if filter_choice.lower() == 'fr':
                 filtered = intelligence.find_red_pixels(file_name, upper_threshold=100, lower_threshold=50)
@@ -687,17 +686,8 @@ def about():
 
     :return: None
     """
-    # Clear the console of text
-    clear()
-
     # List the about information and get user input to return to main menu
-    valid_options_regex = ".*"
-    menu_options = "-------------------About AQUA--------------------\n" \
-                   "Module Code: ECM1400\n" \
-                   "Candidate Number: 239766\n" \
-                   "• Anykey - Return to main menu"
-
-    get_valid_user_input(menu_options, valid_options_regex)
+    get_valid_user_input(Menu.About.options, Menu.About.regex)
 
 
 def quit():
