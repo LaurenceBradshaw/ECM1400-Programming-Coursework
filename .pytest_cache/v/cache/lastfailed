@@ -1,3 +1,6 @@
 {
-  "test/test_reporting.py::test_daily_average": true
+  "test/test_reporting.py::test_daily_average": true,
+  "test/test_intelligence.py::TestCustom": true,
+  "test/test_intelligence.py::TestTemplate": true,
+  "test/test_main.py::TestReadFile": true
 }

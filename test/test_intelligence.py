@@ -202,8 +202,46 @@ class TestCustom:
             assert neighbours == expected
 
     class TestCountValue2D:  # Test countvalue_2d for 0 instances, and > 1 instances
-        pass
+        @pytest.mark.parametrize(["arr", "xw", "expected"], [
+            (np.array([[1, 2, 3, 1, 2], [3, 2, 3, 4, 1, 1]]), 2, 3),
+            (np.array([[1, 2, 3, 1, 2], [3, 2, 3, 4, 1, 1]]), 9, 0)
+        ])
+        def test_expected(self, arr, xw, expected):
+            count = intelligence.countvalue_2d(arr, xw)
+            assert count == expected
 
 
 class TestTemplate:
-    pass
+
+    class TestFilterRed:
+
+        def test_expected(self):
+            arr = [[[255, 40, 30], [255, 255, 255], [255, 255, 255]],
+                   [[255, 255, 255], [255, 10, 49], [255, 255, 255]],
+                   [[255, 255, 255], [10, 255, 255], [255, 42, 32]]]
+            arr = np.array(arr)
+            expected = [[[255, 255, 255], [0, 0, 0], [0, 0, 0]],
+                        [[0, 0, 0], [255, 255, 255], [0, 0, 0]],
+                        [[0, 0, 0], [0, 0, 0], [255, 255, 255]]]
+            expected = np.array(expected)
+            # TODO: Mock read image
+            assert (intelligence.find_red_pixels(arr, upper_threshold=100, lower_threshold=50) == expected).all()
+
+    class TestFilerCyan:
+
+        def test_expected(self):
+            arr = [[[255, 40, 30], [255, 255, 255], [255, 255, 255]],
+                   [[255, 255, 255], [255, 10, 49], [255, 255, 255]],
+                   [[255, 255, 255], [10, 255, 255], [255, 42, 32]]]
+            arr = np.array(arr)
+            expected = [[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+                        [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+                        [[0, 0, 0], [255, 255, 255], [0, 0, 0]]]
+            expected = np.array(expected)
+
+            assert (intelligence.find_cyan_pixels(arr, upper_threshold=100, lower_threshold=50) == expected).all()
+
+    class TestConnectedComponents:
+        pass
+
+
