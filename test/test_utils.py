@@ -27,7 +27,14 @@ class TestCustom:
                 pytest.fail("Unexpected error raised")
 
     class TestRemoveNoData:
-        pass
+
+        @pytest.mark.parametrize(['data', 'expected'], [
+            ([3, 4, 5, 6, 'No data', 7], [3, 4, 5, 6, 7]),
+            (['No data'], [])
+        ])
+        def test_expected(self, data, expected):
+            utils.remove_no_value(data)
+            assert data == expected
 
 
 class TestTemplate:

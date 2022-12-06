@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 import intelligence
 import numpy as np
@@ -215,33 +217,50 @@ class TestTemplate:
 
     class TestFilterRed:
 
-        def test_expected(self):
+        def test_expected(self, monkeypatch):
             arr = [[[255, 40, 30], [255, 255, 255], [255, 255, 255]],
                    [[255, 255, 255], [255, 10, 49], [255, 255, 255]],
                    [[255, 255, 255], [10, 255, 255], [255, 42, 32]]]
-            arr = np.array(arr)
+            arr = np.array(arr)/255
             expected = [[[255, 255, 255], [0, 0, 0], [0, 0, 0]],
                         [[0, 0, 0], [255, 255, 255], [0, 0, 0]],
                         [[0, 0, 0], [0, 0, 0], [255, 255, 255]]]
             expected = np.array(expected)
-            # TODO: Mock read image
+            # Mock read image function so it returns the above arr array
+            monkeypatch.setattr(intelligence, "read_image", lambda filename: arr)
             assert (intelligence.find_red_pixels(arr, upper_threshold=100, lower_threshold=50) == expected).all()
 
-    class TestFilerCyan:
+    class TestFilterCyan:
 
-        def test_expected(self):
+        def test_expected(self, monkeypatch):
             arr = [[[255, 40, 30], [255, 255, 255], [255, 255, 255]],
                    [[255, 255, 255], [255, 10, 49], [255, 255, 255]],
                    [[255, 255, 255], [10, 255, 255], [255, 42, 32]]]
-            arr = np.array(arr)
+            arr = np.array(arr)/255
             expected = [[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
                         [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
                         [[0, 0, 0], [255, 255, 255], [0, 0, 0]]]
             expected = np.array(expected)
-
+            # Mock read image function so it returns the above arr array
+            monkeypatch.setattr(intelligence, "read_image", lambda filename: arr)
             assert (intelligence.find_cyan_pixels(arr, upper_threshold=100, lower_threshold=50) == expected).all()
 
     class TestConnectedComponents:
-        pass
+
+        def test_expected(self):
+            mark = [[[255, 255, 255], [0, 0, 0], [0, 0, 0]],
+                    [[0, 0, 0], [255, 255, 255], [0, 0, 0]],
+                    [[0, 0, 0], [0, 0, 0], [255, 255, 255]]]
+            mark = np.array(mark)
+            expected = [[1, 0, 0],
+                        [0, 1, 0],
+                        [0, 0, 1]]
+            expected = np.array(expected)
+            assert (intelligence.detect_connected_components(mark) == expected).all()
+
+    class TestConnectedComponentsSorted:
+
+        def test_expected(self):
+            pass  # Not sure how to test this since the function does not return anything
 
 
