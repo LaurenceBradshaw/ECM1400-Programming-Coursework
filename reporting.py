@@ -18,28 +18,40 @@ def sort(values: Union[list, np.array]) -> list:
     Description
     ---------------
     Returns a sorted (smallest to largest) list
+    Implementation of the quicksort algorithm
 
     ---------------
     General Overview
     ---------------
-    For the length of values,
-    Find the smallest and append it to a list
-    Remove it from the original list list
-    Repeat until end of list
+    If there are less than 2 elements, the array is sorted
+    Find a pivot
+    Sort into values greater than and less than the pivot
 
     :param values: list/array to sort
     :return: sorted list
     """
 
-    output = []
-    for i in range(len(values)):
-        # Find the smallest value
-        index = utils.minvalue(values)
-        # Append and remove it from the list
-        output.append(values[index])
-        values.pop(index)
+    # if the input array has 1 or fewer elements, it is already sorted
+    if len(values) <= 1:
+        return values
 
-    return output
+    # select the first element in the array to be the pivot
+    pivot = values[0]
+
+    # create two empty lists, one for elements less than the pivot and one for elements greater than the pivot
+    less = []
+    greater = []
+
+    # iterate over the rest of the array
+    for i in range(1, len(values)):
+        # if the element is less than the pivot, add it to the less_than list otherwise, add it to the greater_than list
+        if values[i] < pivot:
+            less.append(values[i])
+        else:
+            greater.append(values[i])
+
+    # call sort on the less_than list, then the greater_than list, then combine the sorted lists and return them
+    return sort(less) + [pivot] + sort(greater)
 
 
 def get_time_range(data: list[dict], start_date: datetime, end_date: datetime, pollutant: str):
@@ -56,11 +68,11 @@ def get_time_range(data: list[dict], start_date: datetime, end_date: datetime, p
     If the date field is within the date range
     Add the pollutant value to the list
 
-    :param data:
-    :param start_date:
-    :param end_date:
-    :param pollutant:
-    :return:
+    :param data: data to get subset from
+    :param start_date: starting date for data to return (inclusive)
+    :param end_date: ending date for data to return (exclusive)
+    :param pollutant: Pollutant to get values for
+    :return: List of values within the time range
     """
     data_in_range = []
     for d in data:
@@ -147,6 +159,7 @@ def daily_average(data, monitoring_station, pollutant):
         utils.remove_no_value(daily_data)
         daily_data = [float(d) for d in daily_data]
 
+        # If there is no data of the day the output for that day is 'No data'
         if len(daily_data) == 0:
             output.append('No data')
 
@@ -203,13 +216,13 @@ def daily_median(data, monitoring_station, pollutant):
             # If there is an odd number of values, an integer middle index can be found
             if len(sorted_values) % 2 == 1:
                 mid_index = int((len(sorted_values) + 1) / 2)
-                output.append(sorted_values[mid_index])
+                output.append(sorted_values[mid_index - 1])
             # If there is an even number of values, take the average of the two values either side of the mid index
             else:
-                mid_index_upper = int(((len(sorted_values) + 1) / 2) + 0.5)
-                mid_index_lower = int(((len(sorted_values) + 1) / 2) - 0.5)
-                upper_value = sorted_values[mid_index_upper]
-                lower_value = sorted_values[mid_index_lower]
+                mid_index_upper = len(sorted_values)//2
+                mid_index_lower = len(sorted_values)//2 - 1
+                upper_value = sorted_values[mid_index_upper - 1]
+                lower_value = sorted_values[mid_index_lower - 1]
                 output.append((upper_value + lower_value) / 2)
 
         # Get date for next day
