@@ -443,7 +443,7 @@ def reporting_menu():
         csv_regex = re.compile('.*\\.csv')
         # Gets names of all the csv files in the directory
         csv_files = list(filter(csv_regex.match, file_names))
-        # Reads each csv into a dictionary of pandas dataframes
+        # Reads each csv into a list of dicts
         data = {}
         for file in csv_files:
             data[file] = read_file(file)
