@@ -138,8 +138,8 @@ def read_file(file_name: str) -> Union[list[dict], None]:
     If no file found return None
     Merge date and time values into a datetime object
 
-    :param file_name:
-    :return:
+    :param file_name: Name of the file to read
+    :return: List of dictionaries containing the data
     """
     try:
         # Read the file
@@ -255,7 +255,7 @@ def get_hourly_times():
     ---------------
     Description
     ---------------
-    Returns the times 01:00:00 to 24:00:00
+    Returns the times 1:00:00 to 24:00:00
 
     :return: List of hours in a day
     """
@@ -277,9 +277,11 @@ def get_monthly_dates(start_date: datetime.datetime):
     :return: List of monthly dates
     """
     dates = []
-    start_month = start_date.month
     for i in range(12):
-        dates.append(str(datetime.date(start_date.year, start_month + i, start_date.day)))
+        d = datetime.date(start_date.year, start_date.month, start_date.day)
+        dates.append(str(d))
+
+        start_date = reporting.add_month(start_date)
 
     return dates
 
