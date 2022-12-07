@@ -38,7 +38,7 @@ def sort(values: Union[list, np.array]) -> list:
     # select the first element in the array to be the pivot
     pivot = values[0]
 
-    # create two empty lists, one for elements less than the pivot and one for elements greater than the pivot
+    # create two empty lists to act as buckets, one for elements less than the pivot and one for elements greater than the pivot
     less = []
     greater = []
 
@@ -449,7 +449,7 @@ def fill_missing_data(data, new_value, monitoring_station, pollutant):
 
     for d in station_data:
         if d[pollutant] == 'No data':
-            d[pollutant] = float(new_value)
+            d[pollutant] = new_value
 
     data[monitoring_station] = station_data
 
