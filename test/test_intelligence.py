@@ -205,8 +205,8 @@ class TestCustom:
 
     class TestCountValue2D:  # Test countvalue_2d for 0 instances, and > 1 instances
         @pytest.mark.parametrize(["arr", "xw", "expected"], [
-            (np.array([[1, 2, 3, 1, 2], [3, 2, 3, 4, 1, 1]]), 2, 3),
-            (np.array([[1, 2, 3, 1, 2], [3, 2, 3, 4, 1, 1]]), 9, 0)
+            (np.array([[1, 2, 3, 1, 2, 0], [3, 2, 3, 4, 1, 1]]), 2, 3),
+            (np.array([[1, 2, 3, 1, 2, 0], [3, 2, 3, 4, 1, 1]]), 9, 0)
         ])
         def test_expected(self, arr, xw, expected):
             count = intelligence.countvalue_2d(arr, xw)
