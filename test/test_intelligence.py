@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 import intelligence
 import numpy as np
