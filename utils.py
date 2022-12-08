@@ -144,11 +144,10 @@ def minvalue(values):
     ---------------
     General Overview
     ---------------
-    Check for non-numeric values
-    Starting with the item at the 0th index as the current min
-    For each value check to see if it is smaller than the current min
-    If so make that value the current min
-    Return the index of the current min
+    Check if the list is empty, and if it is, raise an error.
+    If the list is not empty, it initializes the current minimum to the first value in the list,
+    and then iterates over the remaining values to find the smallest value.
+    Finally, it returns the index of the smallest value.
 
     :param values: List/array that will contain the values to find the min of
     :return: The index of the minimum value found in values parameter
