@@ -38,6 +38,7 @@ def add_row(element: dict, column_info: list, wrap: int, col_max: dict) -> str:
     WARNING
     ---------------
     If the data contains an element that, when split by spaces, is longer than wrap, an infinite loop will be encountered
+    Thus an exception will be raised
 
     :param element: Dictionary containing all data to display on this row
     :param column_info: List of column headings and dict keys associated with them
@@ -54,6 +55,8 @@ def add_row(element: dict, column_info: list, wrap: int, col_max: dict) -> str:
             data_split = element[dict_key].split(' ')  # Split the data for this column up by spaces
             # Add segments to data_for_row until it becomes longer than the max length allowed for a row or all data has been used
             for segments in data_split.copy():
+                if len(segments) > wrap:
+                    raise Exception()
                 data_for_row.append(segments)
                 length_joined = len(' '.join(data_for_row))
                 if length_joined > wrap:  # Got enough data for one row
@@ -95,6 +98,13 @@ def make_table(data: list[dict], column_info: list[tuple], wrap: int = 200) -> s
     Make headings
     Add rows to the table
 
+    ---------------
+    WARNING
+    ---------------
+    If an exception is raised by the add_row function, then the following string with be
+    returned from this function:
+    "A piece of data contained a segment that was longer than the wrap limit"
+
     :param wrap: Max length of a column before text wraps
     :param data: Data to make table from
     :param column_info: List of tuples containing (Heading name, Dictionary key)
@@ -134,8 +144,11 @@ def make_table(data: list[dict], column_info: list[tuple], wrap: int = 200) -> s
 
     # For each element in the data, append the correct column data to the row in the table string
     table_string += "\n"
-    for d in data:
-        table_string += add_row(d, column_info, wrap, col_max)
+    try:
+        for d in data:
+            table_string += add_row(d, column_info, wrap, col_max)
+    except Exception:
+        return "A piece of data contained a segment that was longer than the wrap limit"
 
     return table_string
 
@@ -213,9 +226,12 @@ def make_graph(data: list[dict], pollutant: str):
     step = (max_value - min_value)/21
 
     # Replace 'No data' values with -1 since this shouldn't display on the graph
+    values_without_no_data = []
     for value in values:
         if value == 'No data':
-            value = -1
+            values_without_no_data.append(-1)
+        else:
+            values_without_no_data.append(value)
 
     # Find the value with the longest length
     longest = 0
@@ -225,7 +241,7 @@ def make_graph(data: list[dict], pollutant: str):
             longest = len(str(value))
 
     graph_string = ''
-    current_value = max_value
+    current_value = max_value  # Current value is the value that is at the top of the current range for data to be displayed
     # For each line that will be in the graph
     for i in range(21):
         # Put a value label on every other line in the graph
@@ -235,8 +251,8 @@ def make_graph(data: list[dict], pollutant: str):
             graph_string += " " * longest + " |"
 
         # For each value in the data, if it is within the range to be displayed on this line, put a *
-        for value in values:
-            if (current_value - step) <= float(value) < current_value:
+        for value in values_without_no_data:
+            if (current_value - step) <= float(value):
                 graph_string += "*"
             else:
                 graph_string += " "
