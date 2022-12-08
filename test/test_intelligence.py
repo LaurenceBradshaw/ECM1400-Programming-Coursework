@@ -213,6 +213,10 @@ class TestCustom:
 
 class TestTemplate:
 
+    @pytest.fixture(autouse=True)
+    def change_test_dir(self, request, monkeypatch):
+        monkeypatch.chdir(request.fspath.dirname)
+
     class TestFilterRed:
 
         def test_expected(self, monkeypatch):

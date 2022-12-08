@@ -48,6 +48,13 @@ class TestCustom:
 
 class TestTemplate:
 
+    @pytest.fixture(autouse=True)
+    def change_test_dir(self, request, monkeypatch):
+        """
+        Change the current working directory for the test so that it looks for and saves data a directory in test/
+        """
+        monkeypatch.chdir(request.fspath.dirname)
+
     @pytest.fixture
     def valid_data(self):
         """
