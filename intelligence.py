@@ -388,26 +388,49 @@ def detect_connected_components_sorted(*args, **kwargs):
     mark = args[0]
     # Will contain tuples of (component number, pixel count)
     components = []
+    components_as_dict = {}
     component_number = 1
-    # Count the number of pixels in component 1
-    pixel_count = countvalue_2d(mark, component_number)
-    # If pixels are found, then that component exists
-    while pixel_count > 0:
-        components.append((component_number, pixel_count))
-        # Increment component number and count the number of pixels in the next component
-        component_number += 1
-        pixel_count = countvalue_2d(mark, component_number)
+    # Count the number of pixels in each component
+    for x in range(mark.shape[0]):
+        for y in range(mark.shape[1]):
+            if mark[x, y] > 0:
+                if mark[x, y] not in components_as_dict:
+                    components_as_dict[mark[x, y]] = 1
+                else:
+                    components_as_dict[mark[x, y]] += 1
 
-    sorted_components = []
-    pixels = [x[1] for x in components]
-    for i in range(len(components)):
-        # Find the largest value
-        index = utils.maxvalue(pixels)
-        # Append and remove it from the list
-        sorted_components.append(components[index])
-        pixels.pop(index)
-        components.pop(index)
+    # Convert to tuples as defined above
+    for key in components_as_dict:
+        components.append((key, components_as_dict[key]))
 
+    def sort_components(comp):
+        """
+        Modified version of the sort function in reporting.py so that it functions with tuples
+        :param comp: List of components to sort
+        :return: Sorted list of component tuples
+        """
+        if len(comp) <= 1:
+            return comp
+
+        # select the first element in the array to be the pivot
+        pivot = comp[0][1]
+
+        # create two empty lists to act as buckets, one for elements less than the pivot and one for elements greater than the pivot
+        less = []
+        greater = []
+
+        # iterate over the rest of the array
+        for i in range(1, len(comp)):
+            # if the element is less than the pivot, add it to the less_than list otherwise, add it to the greater_than list
+            if comp[i][1] < pivot:
+                less.append(comp[i])
+            else:
+                greater.append(comp[i])
+
+        # call sort on the less_than list, then the greater_than list, then combine the sorted lists and return them
+        return sort_components(less) + [comp[0]] + sort_components(greater)
+
+    sorted_components = sort_components(components)
     # Create line to write to file
     output_strings = []
     for i in range(len(sorted_components)):
