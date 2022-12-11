@@ -27,8 +27,8 @@ def read_image(file_name: str) -> Union[np.ndarray, None]:
     Try to read the file
     If error return None
 
-    :param file_name:
-    :return:
+    :param file_name: Name of the image file to load
+    :return: 2d numpy array containing image data
     """
     try:
         cwd = os.getcwd()
@@ -161,7 +161,6 @@ def pop_queue(queue: np.array, head: int) -> tuple:
     Description
     ---------------
     Pops an element from the front of the numpy ndarry queue
-    If given an empty queue pop will return None
 
     :param head: Value for head pointer of queue
     :param queue: The queue to pop the value from
@@ -195,11 +194,13 @@ def find_neighbours(s: int, t: int, img_width: int, img_height: int) -> list:
     :return: List containing the row and column for all the valid adjacent pixels
     """
     neighbours = []
+    # Find the 8 neighbouring pixels
     for x in range(-1, 2):
         for y in range(-1, 2):
             if x != 0 or y != 0:
                 neighbours.append([x + s, y + t])
 
+    # Check if the pixel calculated will be inside the bounds of the image
     for neighbour in neighbours.copy():
         if neighbour[0] < 0 or neighbour[1] < 0 or neighbour[0] >= img_width or neighbour[1] >= img_height:
             neighbours.remove(neighbour)
@@ -218,6 +219,7 @@ def countvalue_2d(array: np.array, xw):
     :param xw: What to find instances of
     :return: Number of xw instances
     """
+
     # Holds the number of occurrences of xw found in values
     xw_count = 0
     # For each element in values, if it is equal to xw, add 1 to xw_count
@@ -381,7 +383,7 @@ def detect_connected_components_sorted(*args, **kwargs):
     Write the top two components to "cc-top-2.jpg"
 
     :param args: MARK from detect_connected_components function
-    :param kwargs:
+    :param kwargs: None
     :return: None
     """
 
@@ -406,6 +408,8 @@ def detect_connected_components_sorted(*args, **kwargs):
     def sort_components(comp):
         """
         Modified version of the sort function in reporting.py so that it functions with tuples
+        Defined locally within another function because this is its only use
+
         :param comp: List of components to sort
         :return: Sorted list of component tuples
         """

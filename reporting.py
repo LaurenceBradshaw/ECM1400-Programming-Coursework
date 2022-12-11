@@ -18,7 +18,7 @@ def sort(values: Union[list, np.array]) -> list:
     Description
     ---------------
     Returns a sorted (smallest to largest) list
-    Implementation of the quicksort algorithm
+    Implementation of a modified quicksort algorithm
 
     ---------------
     General Overview
@@ -142,8 +142,10 @@ def daily_average(data, monitoring_station, pollutant):
     :return: A list containing the daily averages
     """
 
+    # Get the data for the selected monitoring station
     station_data = data[monitoring_station]
 
+    # Check for missing data
     missing_data_count = count_missing_data(data, monitoring_station, pollutant)
     if missing_data_count > 0:
         print(f'{missing_data_count} values contained \'No data\' and have been omitted from the calculations')
@@ -152,20 +154,24 @@ def daily_average(data, monitoring_station, pollutant):
     start_date = station_data[0]['datetime']
     time_delta = timedelta(days=1)
 
+    # For every day in the year
     for day in range(365):
+        # Set the sum to 0
         daily_sum = 0
 
+        # Get data for the day
         daily_data = get_time_range(station_data, start_date, start_date + time_delta, pollutant)
+        # Remove 'No data' entries and convert to data to floats
         utils.remove_no_value(daily_data)
         daily_data = [float(d) for d in daily_data]
 
         # If there is no data of the day the output for that day is 'No data'
         if len(daily_data) == 0:
             output.append('No data')
-
-        else:
+        else:  # Find mean
             output.append(utils.meannvalue(daily_data))
 
+        # Increment the date
         start_date += time_delta
 
     return output
@@ -192,9 +198,11 @@ def daily_median(data, monitoring_station, pollutant):
     :return: An array containing the daily medians
     """
 
+    # Get the data for the selected monitoring station
     station_data = data[monitoring_station]
     output = []
 
+    # Check for missing data
     missing_data_count = count_missing_data(data, monitoring_station, pollutant)
     if missing_data_count > 0:
         print(f'{missing_data_count} values contained \'No data\' and have been omitted from the calculations')
@@ -205,10 +213,14 @@ def daily_median(data, monitoring_station, pollutant):
 
     # For each day in the year, get the values for that day, remove 'No data' and find the median
     for i in range(365):
+        # Get data for the day
         day_values = get_time_range(station_data, start_date, start_date + time_delta, pollutant)
-        utils.remove_no_value(day_values)  # This may change the length of the list so later indexes could be any length
+        # Remove 'No data' entries and convert data to floats and sort
+        # This may change the length of the list so later indexes could be any length
+        utils.remove_no_value(day_values)
         day_values = [float(d) for d in day_values]
         sorted_values = sort(day_values)
+
         # If there is no data for all values in the day, return 'No data' as median
         if len(sorted_values) == 0:
             output.append('No data')
@@ -256,10 +268,12 @@ def hourly_average(data, monitoring_station, pollutant):
     :return: An array containing the hourly averages
     """
 
+    # Get the data for the selected monitoring station
     station_data = data[monitoring_station]
     # Stores the averages
     output = []
 
+    # Check for missing data
     missing_data_count = count_missing_data(data, monitoring_station, pollutant)
     if missing_data_count > 0:
         print(f'{missing_data_count} values contained \'No data\' and have been omitted from the calculations')
@@ -278,10 +292,11 @@ def hourly_average(data, monitoring_station, pollutant):
             hour_values += get_time_range(station_data, start_date, start_date + time_delta_hour, pollutant)
             start_date += time_delta_day
 
-        # Remove 'No data' and calculate average
+        # Remove 'No data' entries and convert to floats
         utils.remove_no_value(hour_values)
         hour_values = [float(value) for value in hour_values]
 
+        # If there is no data return 'No data' as the average for that hour, otherwise, find the mean
         if len(hour_values) == 0:
             output.append('No data')
         else:
@@ -320,10 +335,12 @@ def monthly_average(data, monitoring_station, pollutant):
     :return: An array containing the monthly averages
     """
 
+    # Get the data for the selected monitoring station
     station_data = data[monitoring_station]
     # Stores the averages
     output = []
 
+    # Check for missing data
     missing_data_count = count_missing_data(data, monitoring_station, pollutant)
     if missing_data_count > 0:
         print(f'{missing_data_count} values contained \'No data\' and have been omitted from the calculations')
@@ -331,14 +348,14 @@ def monthly_average(data, monitoring_station, pollutant):
     # Sets the start date and difference in time
     start_date = station_data[0]['datetime']
 
-    # For each day in the year, get the values for that day, remove 'No data' and find the average
+    # For each month in the year, get the values for that month, remove 'No data' and find the average
     for i in range(12):
         end_date = add_month(start_date)
         month_values = get_time_range(station_data, start_date, end_date, pollutant)
         utils.remove_no_value(month_values)
         month_values = [float(value) for value in month_values]
 
-        # If there is no data for the month append 'No data' for that month
+        # If there is no data for the month append 'No data' for that month, otherwise, find the mean
         if len(month_values) == 0:
             output.append('No data')
         else:
@@ -380,7 +397,7 @@ def peak_hour_date(data, date, monitoring_station, pollutant):
     utils.remove_no_value(day_values)
     day_values = [float(value) for value in day_values]
 
-    # If all the values for the day are 'No data'
+    # If all the values for the day are 'No data' and hence removed
     if len(day_values) == 0:
         return 'No data for given date', 0
 
@@ -416,6 +433,7 @@ def count_missing_data(data, monitoring_station, pollutant):
     # Gets the correct data for the monitoring station from the data dictionary
     station_data = data[monitoring_station]
 
+    # Iterate over the data and check if it is a 'No data' entry and add one to the counter
     count = 0
     for d in station_data:
         if d[pollutant] == 'No data':
@@ -445,12 +463,15 @@ def fill_missing_data(data, new_value, monitoring_station, pollutant):
     :return: Data in the original data parameter format
     """
 
+    # Gets the correct data for the monitoring station from the data dictionary
     station_data = data[monitoring_station].copy()
 
+    # Iterate over the data and check if it is a 'No data' entry and replace it with the new value
     for d in station_data:
         if d[pollutant] == 'No data':
             d[pollutant] = new_value
 
+    # Return the data to the dictionary
     data[monitoring_station] = station_data
 
     return data

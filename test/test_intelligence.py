@@ -198,6 +198,15 @@ class TestCustom:
             (4, -4, 3, 3, [])  # Outside negative
         ])
         def test_expected(self, s, t, img_w, img_h, expected):
+            """
+            Test that neighbours are correctly found
+            :param s: Current x
+            :param t: Current y
+            :param img_w: width of the image
+            :param img_h: height of the image
+            :param expected: Expected return
+            :return: None
+            """
             neighbours = intelligence.find_neighbours(s, t, img_w, img_h)
             assert neighbours == expected
 
@@ -207,6 +216,13 @@ class TestCustom:
             (np.array([[1, 2, 3, 1, 2, 0], [3, 2, 3, 4, 1, 1]]), 9, 0)
         ])
         def test_expected(self, arr, xw, expected):
+            """
+            Test that the 2D array is counted properly
+            :param arr: Array to count data in
+            :param xw: Element to count
+            :param expected: Expected number to be returned
+            :return: None
+            """
             count = intelligence.countvalue_2d(arr, xw)
             assert count == expected
 
@@ -220,6 +236,11 @@ class TestTemplate:
     class TestFilterRed:
 
         def test_expected(self, monkeypatch):
+            """
+            Test that red pixels are correctly found
+            :param monkeypatch: Used to patch the read image function so that the below array is used instead
+            :return: None
+            """
             arr = [[[255, 40, 30], [255, 255, 255], [255, 255, 255]],
                    [[255, 255, 255], [255, 10, 49], [255, 255, 255]],
                    [[255, 255, 255], [10, 255, 255], [255, 42, 32]]]
@@ -235,6 +256,11 @@ class TestTemplate:
     class TestFilterCyan:
 
         def test_expected(self, monkeypatch):
+            """
+            Test that cyan pixels are correctly found
+            :param monkeypatch: Used to patch the read image function so that the below array is used instead
+            :return: None
+            """
             arr = [[[255, 40, 30], [255, 255, 255], [255, 255, 255]],
                    [[255, 255, 255], [255, 10, 49], [255, 255, 255]],
                    [[255, 255, 255], [10, 255, 255], [255, 42, 32]]]
@@ -250,6 +276,10 @@ class TestTemplate:
     class TestConnectedComponents:
 
         def test_expected(self):
+            """
+            Test that the connected components are correctly found
+            :return: None
+            """
             mark = [[[255, 255, 255], [0, 0, 0], [0, 0, 0]],
                     [[0, 0, 0], [255, 255, 255], [0, 0, 0]],
                     [[0, 0, 0], [0, 0, 0], [255, 255, 255]]]

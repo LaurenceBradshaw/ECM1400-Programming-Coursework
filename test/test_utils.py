@@ -33,6 +33,12 @@ class TestCustom:
             (['No data'], [])
         ])
         def test_expected(self, data, expected):
+            """
+            Test that the function removes 'No data' entries correctly
+            :param data: Data to remove 'No data' from
+            :param expected: Data with the 'No data' entries removed
+            :return: None
+            """
             utils.remove_no_value(data)
             assert data == expected
 
