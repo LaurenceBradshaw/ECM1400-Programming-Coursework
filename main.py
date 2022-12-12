@@ -117,6 +117,7 @@ class Menu:
         options = "Enter station code to get data for:"
         regex = ".*"
 
+
 # -------------------------
 # My custom functions
 # -------------------------
@@ -398,8 +399,10 @@ def main_menu():
     • M - Access the Real-time Monitoring module
     • A - Print the About text
     • Q - Quit the application
+
     :return: None
     """
+
     # while loop is used so the user can come back to the main menu and the program not close until they pick quit
     while True:
         # Get the user input for the main menu
@@ -434,6 +437,7 @@ def reporting_menu():
     • C - Count the number of rows with missing data
     • F - Fill missing data rows
     • B - Return to main menu
+
     :return: None
     """
 

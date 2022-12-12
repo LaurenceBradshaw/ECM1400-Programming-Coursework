@@ -1,5 +1,4 @@
 import datetime
-
 import pytest
 import main
 import reporting
@@ -66,10 +65,16 @@ class TestCustom:
                 (datetime.datetime(year=2022, month=1, day=1))
             ])
             def test_dates_are_a_day_apart(self, date):
+                """
+                Test that a years worth daily dates is returned
+                :param date: Date to start from
+                :return: None
+                """
                 dates = main.get_daily_dates(date)
                 assert len(dates) == 365
 
                 day_apart = []
+                # Check that there is a difference of 1 day between days
                 for i in range(1, len(dates)):
                     if datetime.datetime.strptime(dates[i], '%Y-%m-%d') - datetime.datetime.strptime(dates[i - 1], '%Y-%m-%d') == datetime.timedelta(days=1):
                         day_apart.append(True)
@@ -81,6 +86,10 @@ class TestCustom:
         class TestGetHourlyTimes:
 
             def test_expected(self):
+                """
+                Test the correct hours are returned from the function
+                :return: None
+                """
                 assert main.get_hourly_times() == ['1:00:00', '2:00:00', '3:00:00', '4:00:00', '5:00:00', '6:00:00', '7:00:00', '8:00:00',
                                                    '9:00:00', '10:00:00', '11:00:00', '12:00:00', '13:00:00', '14:00:00', '15:00:00', '16:00:00',
                                                    '17:00:00', '18:00:00', '19:00:00', '20:00:00', '21:00:00', '22:00:00', '23:00:00', '24:00:00']
@@ -94,10 +103,16 @@ class TestCustom:
                 (datetime.datetime(year=2021, month=12, day=1))
             ])
             def test_dates_are_a_month_apart(self, date):
+                """
+                Test that the function returns a years worth of monthly dates
+                :param date: Date to start from
+                :return: None
+                """
                 actual = main.get_monthly_dates(date)
 
                 month_apart = []
 
+                # Check that the difference in time between dates is a month
                 for i in range(1, len(actual)):
                     datetime_date = datetime.datetime.strptime(actual[i], '%Y-%m-%d')
                     prev_datetime_date = datetime.datetime.strptime(actual[i - 1], '%Y-%m-%d')

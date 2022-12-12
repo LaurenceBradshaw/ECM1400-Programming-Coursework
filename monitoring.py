@@ -55,13 +55,14 @@ def add_row(element: dict, column_info: list, wrap: int, col_max: dict) -> str:
             data_split = element[dict_key].split(' ')  # Split the data for this column up by spaces
             # Add segments to data_for_row until it becomes longer than the max length allowed for a row or all data has been used
             for segments in data_split.copy():
-                if len(segments) > wrap:
+                if len(segments) > wrap:  # If the length of an element is longer than wrap, it cannot be displayed
                     raise Exception()
+
                 data_for_row.append(segments)
                 length_joined = len(' '.join(data_for_row))
                 if length_joined > wrap:  # Got enough data for one row
                     # Remove the last segment because it made the string too long
-                    data_for_row.pop(-1)
+                    data_for_row.pop()
                     # Replace the data with the remaining data
                     element[dict_key] = ' '.join(data_split)
                     break

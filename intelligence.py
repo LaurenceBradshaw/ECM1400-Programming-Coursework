@@ -27,8 +27,8 @@ def read_image(file_name: str) -> Union[np.ndarray, None]:
     Try to read the file
     If error return None
 
-    :param file_name:
-    :return:
+    :param file_name: Name of the image file to load
+    :return: 2d numpy array containing image data
     """
     try:
         cwd = os.getcwd()
@@ -161,7 +161,6 @@ def pop_queue(queue: np.array, head: int) -> tuple:
     Description
     ---------------
     Pops an element from the front of the numpy ndarry queue
-    If given an empty queue pop will return None
 
     :param head: Value for head pointer of queue
     :param queue: The queue to pop the value from
@@ -195,11 +194,13 @@ def find_neighbours(s: int, t: int, img_width: int, img_height: int) -> list:
     :return: List containing the row and column for all the valid adjacent pixels
     """
     neighbours = []
+    # Find the 8 neighbouring pixels
     for x in range(-1, 2):
         for y in range(-1, 2):
             if x != 0 or y != 0:
                 neighbours.append([x + s, y + t])
 
+    # Check if the pixel calculated will be inside the bounds of the image
     for neighbour in neighbours.copy():
         if neighbour[0] < 0 or neighbour[1] < 0 or neighbour[0] >= img_width or neighbour[1] >= img_height:
             neighbours.remove(neighbour)
@@ -218,6 +219,7 @@ def countvalue_2d(array: np.array, xw):
     :param xw: What to find instances of
     :return: Number of xw instances
     """
+
     # Holds the number of occurrences of xw found in values
     xw_count = 0
     # For each element in values, if it is equal to xw, add 1 to xw_count
@@ -378,33 +380,58 @@ def detect_connected_components_sorted(*args, **kwargs):
     Write the top two components to "cc-top-2.jpg"
 
     :param args: MARK from detect_connected_components function
-    :param kwargs:
+    :param kwargs: None
     :return: None
     """
 
     mark = args[0]
     # Will contain tuples of (component number, pixel count)
     components = []
+    components_as_dict = {}
     component_number = 1
-    # Count the number of pixels in component 1
-    pixel_count = countvalue_2d(mark, component_number)
-    # If pixels are found, then that component exists
-    while pixel_count > 0:
-        components.append((component_number, pixel_count))
-        # Increment component number and count the number of pixels in the next component
-        component_number += 1
-        pixel_count = countvalue_2d(mark, component_number)
+    # Count the number of pixels in each component
+    for x in range(mark.shape[0]):
+        for y in range(mark.shape[1]):
+            if mark[x, y] > 0:
+                if mark[x, y] not in components_as_dict:
+                    components_as_dict[mark[x, y]] = 1
+                else:
+                    components_as_dict[mark[x, y]] += 1
 
-    sorted_components = []
-    pixels = [x[1] for x in components]
-    for i in range(len(components)):
-        # Find the largest value
-        index = utils.maxvalue(pixels)
-        # Append and remove it from the list
-        sorted_components.append(components[index])
-        pixels.pop(index)
-        components.pop(index)
+    # Convert to tuples as defined above
+    for key in components_as_dict:
+        components.append((key, components_as_dict[key]))
 
+    def sort_components(comp):
+        """
+        Modified version of the sort function in reporting.py so that it functions with tuples
+        Defined locally within another function because this is its only use
+
+        :param comp: List of components to sort
+        :return: Sorted list of component tuples
+        """
+        if len(comp) <= 1:
+            return comp
+
+        # select the first element in the array to be the pivot
+        pivot = comp[0][1]
+
+        # create two empty lists to act as buckets, one for elements less than the pivot and one for elements greater than the pivot
+        less = []
+        greater = []
+
+        # iterate over the rest of the array
+        for i in range(1, len(comp)):
+            # if the element is less than the pivot, add it to the less_than list otherwise, add it to the greater_than list
+            if comp[i][1] < pivot:
+                less.append(comp[i])
+            else:
+                greater.append(comp[i])
+
+        # call sort on the less_than list, then the greater_than list, then combine the sorted lists and return them
+        return sort_components(less) + [comp[0]] + sort_components(greater)
+
+    sorted_components = sort_components(components)
     # Create line to write to file
     output_strings = []
     for i in range(len(sorted_components)):

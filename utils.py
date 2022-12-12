@@ -24,6 +24,11 @@ def check_numeric(values: Union[list, np.array], exception_message: str):
     If the data type is not int or float
     Raise an exception
 
+    ---------------
+    Raises
+    ---------------
+    ValueError when a non-numeric character is present
+
     :param values: List/array of the values to check
     :param exception_message: Message to display with the exception if a non-numeric is found
     :return: None
@@ -78,6 +83,11 @@ def sumvalues(values):
     For each value in the data
     Add it to a sum variable
 
+    ---------------
+    Raises
+    ---------------
+    ValueError when a non-numeric character is present
+
     :param values: List/array that will contain the values to sum
     :return: Sum of the values in the values parameter
     """
@@ -110,6 +120,11 @@ def maxvalue(values):
     For each value check to see if it is larger than the current max
     If so make that value the current max
     Return the index of the current max
+
+    ---------------
+    Raises
+    ---------------
+    ValueError when a non-numeric character is present
 
     :param values: List/array that will contain the values to find the max of
     :return: The index of the maximum value found in values parameter
@@ -149,6 +164,11 @@ def minvalue(values):
     and then iterates over the remaining values to find the smallest value.
     Finally, it returns the index of the smallest value.
 
+    ---------------
+    Raises
+    ---------------
+    ValueError when a non-numeric character is present
+
     :param values: List/array that will contain the values to find the min of
     :return: The index of the minimum value found in values parameter
     """
@@ -187,6 +207,11 @@ def meannvalue(values):
     If there are no items in the input data return 0
     Sum up values
     Divide by number of values
+
+    ---------------
+    Raises
+    ---------------
+    ValueError when a non-numeric character is present
 
     :param values: List/array that will contain the values to find the mean of
     :return: The arithmetic mean
