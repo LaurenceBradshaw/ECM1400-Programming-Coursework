@@ -254,7 +254,7 @@ def find_red_pixels(*args, **kwargs):
     new_map = filter_pixels(map_file, upper_threshold, lower_threshold, red_pixel_condition)
 
     # Save the binary image array as a jpg file
-    mat_plot.imsave("outputs/map-red-pixels.jpg", np.uint8(new_map))
+    mat_plot.imsave("map-red-pixels.jpg", np.uint8(new_map))
 
     return new_map
 
@@ -283,7 +283,7 @@ def find_cyan_pixels(*args, **kwargs):
     new_map = filter_pixels(map_file, upper_threshold, lower_threshold, cyan_pixel_condition)
 
     # Save the binary image array as a jpg file
-    mat_plot.imsave("outputs/map-cyan-pixels.jpg", np.uint8(new_map))
+    mat_plot.imsave("map-cyan-pixels.jpg", np.uint8(new_map))
 
     return new_map
 
@@ -356,17 +356,14 @@ def detect_connected_components(*args, **kwargs):
                 # Add a string containing this information to the output_strings list
                 output_strings.append(f"Connected Component {component_number}, number of pixels = {current_component_pixel_count}")
 
-    # Count the total number of connected components
-    component_count = len(output_strings)
-
     # Opens and overwrites the cc-output-2a.txt file if it exists, else it makes a new one
-    with open("outputs/cc-output-2a.txt", 'w') as f:
+    with open("cc-output-2a.txt", 'w') as f:
         # Writes all lines to the file
         for line in output_strings:
             f.write(line)
             f.write("\n")
-        # Writes the total number of connected components to the end of the file
-        f.write(f"Total number of connected components = {component_count}")
+        # Writes the total number of connected components to the end of the file (highest component number which is the last)
+        f.write(f"Total number of connected components = {component_number}")
 
     return mark
 
@@ -414,16 +411,16 @@ def detect_connected_components_sorted(*args, **kwargs):
         output_strings.append(f"Connected Component {sorted_components[i][0]}, number of pixels = {sorted_components[i][1]}")
 
     # Opens and overwrites the cc-output-2b.txt file if it exists, else it makes a new one
-    with open("outputs/cc-output-2b.txt", 'w') as f:
+    with open("cc-output-2b.txt", 'w') as f:
         # Writes all lines to the file
         for line in output_strings:
             f.write(line)
             f.write("\n")
         # Writes the total number of connected components to the end of the file
-        f.write(f"Total number of connected components = {len(sorted_components)}")
+        f.write(f"Total number of connected components = {sorted_components[-1][0]}")
 
     # Very hacked together use of the filter_pixels function :)
     top_two_map = filter_pixels(mark, sorted_components[0][0], sorted_components[1][0], top_two_condition)
     # Save the binary image of the top two components as a jpg file
-    mat_plot.imsave("outputs/cc-top-2.jpg", np.uint8(top_two_map))
+    mat_plot.imsave("cc-top-2.jpg", np.uint8(top_two_map))
 
