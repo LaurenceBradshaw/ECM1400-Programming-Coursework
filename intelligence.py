@@ -233,7 +233,7 @@ def countvalue_2d(array: np.array, xw):
 # Template Functions
 # -------------------------
 
-def find_red_pixels(*args, **kwargs):
+def find_red_pixels(map_filename, upper_threshold=100, lower_threshold=50):
     """
     ---------------
     Description
@@ -242,13 +242,11 @@ def find_red_pixels(*args, **kwargs):
     If, at a pixel, r > Upper Threshold and g < Lower Threshold
     and b < Lower Threshold, this pixel is red.
 
-    :param args: First element contains the name of the image file
-    :param kwargs: upper_threshold and lower_threshold to hold the values used to consider a pixel red
+    :param lower_threshold: Lower threshold for considering an RGB value in a pixel to be valid
+    :param upper_threshold: Upper threshold for considering an RGB value in a pixel to be valid
+    :param map_filename: Name of the map to load
     :return: An array containing all the binary pixels
     """
-    map_filename = args[0]
-    upper_threshold = kwargs['upper_threshold']
-    lower_threshold = kwargs['lower_threshold']
 
     # Load the image
     map_file = read_image(map_filename) * 255
@@ -261,7 +259,7 @@ def find_red_pixels(*args, **kwargs):
     return new_map
 
 
-def find_cyan_pixels(*args, **kwargs):
+def find_cyan_pixels(map_filename, upper_threshold, lower_threshold):
     """
     ---------------
     Description
@@ -270,14 +268,11 @@ def find_cyan_pixels(*args, **kwargs):
     If, at a pixel, r < Lower Threshold and
     g > Upper Threshold and b > Upper Threshold, this pixel is cyan
 
-    :param args: First element contains the name of the image file
-    :param kwargs: upper_threshold and lower_threshold to hold the values used to consider a pixel cyan
+    :param lower_threshold: Lower threshold for considering an RGB value in a pixel to be valid
+    :param upper_threshold: Upper threshold for considering an RGB value in a pixel to be valid
+    :param map_filename: Name of the map to load
     :return: An array containing all the binary pixels
     """
-
-    map_filename = args[0]
-    upper_threshold = kwargs['upper_threshold']
-    lower_threshold = kwargs['lower_threshold']
 
     # Load the image
     map_file = read_image(map_filename) * 255
@@ -290,7 +285,7 @@ def find_cyan_pixels(*args, **kwargs):
     return new_map
 
 
-def detect_connected_components(*args, **kwargs):
+def detect_connected_components(img):
     """
     ---------------
     Description
@@ -299,12 +294,10 @@ def detect_connected_components(*args, **kwargs):
     Gives each connected component a number and counts the number of pixels in the component
     Writes the output to a txt file called cc-output-2a.txt
 
-    :param args: Input ndarray image
-    :param kwargs: None
+    :param img: Numpy array containing binary image to find connected components for
     :return: 2D array MARK
     """
 
-    img = args[0]
     # Gets the width and height of the input image
     img_width = img.shape[0]
     img_height = img.shape[1]
@@ -370,7 +363,7 @@ def detect_connected_components(*args, **kwargs):
     return mark
 
 
-def detect_connected_components_sorted(*args, **kwargs):
+def detect_connected_components_sorted(mark):
     """
     ---------------
     Description
@@ -379,12 +372,10 @@ def detect_connected_components_sorted(*args, **kwargs):
     Writes the output to "cc-output-2b.txt"
     Write the top two components to "cc-top-2.jpg"
 
-    :param args: MARK from detect_connected_components function
-    :param kwargs: None
+    :param mark: MARK from detect_connected_components function
     :return: None
     """
 
-    mark = args[0]
     # Will contain tuples of (component number, pixel count)
     components = []
     components_as_dict = {}
