@@ -413,13 +413,13 @@ def detect_connected_components_sorted(mark):
 
         # iterate over the rest of the array
         for i in range(1, len(comp)):
-            # if the element is less than the pivot, add it to the less_than list otherwise, add it to the greater_than list
+            # if the element is less than the pivot, add it to the less list otherwise, add it to the greater list
             if comp[i][1] < pivot:
                 less.append(comp[i])
             else:
                 greater.append(comp[i])
 
-        # call sort on the less_than list, then the greater_than list, then combine the sorted lists and return them
+        # call sort on the less list, then the greater list, then combine the sorted lists and return them
         return sort_components(less) + [comp[0]] + sort_components(greater)
 
     sorted_components = sort_components(components)
