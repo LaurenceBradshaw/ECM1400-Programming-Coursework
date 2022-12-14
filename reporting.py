@@ -31,26 +31,26 @@ def sort(values: Union[list, np.array]) -> list:
     :return: sorted list
     """
 
-    # if the input array has 1 or fewer elements, it is already sorted
+    # If the input array has 1 or fewer elements, it is already sorted
     if len(values) <= 1:
         return values
 
-    # select the first element in the array to be the pivot
+    # Select the first element in the array to be the pivot
     pivot = values[0]
 
-    # create two empty lists to act as buckets, one for elements less than the pivot and one for elements greater than the pivot
+    # Create two empty lists to act as buckets, one for elements less than the pivot and one for elements greater than the pivot
     less = []
     greater = []
 
-    # iterate over the rest of the array
+    # Iterate over the rest of the array
     for i in range(1, len(values)):
-        # if the element is less than the pivot, add it to the less_than list otherwise, add it to the greater_than list
+        # If the element is less than the pivot, add it to the less list otherwise, add it to the greater list
         if values[i] < pivot:
             less.append(values[i])
         else:
             greater.append(values[i])
 
-    # call sort on the less_than list, then the greater_than list, then combine the sorted lists and return them
+    # Call sort on the less list, the greater list, and then combine the sorted lists and return them
     return sort(less) + [pivot] + sort(greater)
 
 
